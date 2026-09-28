@@ -11,5 +11,6 @@ public sealed class RetailSalesController(ISender sender) : ControllerBase
         if (request.TotalAmount < 0) return BadRequest("TotalAmount cannot be negative.");
         var id = await sender.Send(request, cancellationToken);
         return Created($"/api/retail-sales/{id}", new { id });
+        
     }
 }
