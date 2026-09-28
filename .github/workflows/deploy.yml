@@ -1,0 +1,114 @@
+name: Deploy CommerceManager to Production
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: commerce-manager-production
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build API and Web
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: '9.0.x'
+
+      - name: Restore API
+        run: dotnet restore src/CommerceManager.Api/CommerceManager.Api.csproj
+
+      - name: Restore Web
+        run: dotnet restore src/CommerceManager.Web/CommerceManager.Web.csproj
+
+      - name: Build API
+        run: >
+          dotnet build
+          src/CommerceManager.Api/CommerceManager.Api.csproj
+          -c Release
+          --no-restore
+
+      - name: Build Web
+        run: >
+          dotnet build
+          src/CommerceManager.Web/CommerceManager.Web.csproj
+          -c Release
+          --no-restore
+
+  deploy:
+    name: Deploy Production
+    needs: build
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Configure SSH
+        env:
+          SSH_PRIVATE_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+        run: |
+          mkdir -p ~/.ssh
+          chmod 700 ~/.ssh
+          printf '%s\n' "$SSH_PRIVATE_KEY" > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -p "$DEPLOY_PORT" -H "$DEPLOY_HOST" >> ~/.ssh/known_hosts
+
+      - name: Deploy API and Web
+        env:
+          DEPLOY_HOST: ${{ secrets.DEPLOY_HOST }}
+          DEPLOY_PORT: ${{ secrets.DEPLOY_PORT }}
+          DEPLOY_USER: ${{ secrets.DEPLOY_USER }}
+        run: |
+          ssh -i ~/.ssh/deploy_key \
+            -p "$DEPLOY_PORT" \
+            "$DEPLOY_USER@$DEPLOY_HOST" << 'EOF'
+              set -e
+
+              cd /opt/apps/commerce-manager/app
+
+              git fetch origin master
+              git checkout master
+              git pull --ff-only origin master
+
+              cd /opt/apps/commerce-manager
+
+              docker compose build commerce-api commerce-web
+
+              docker compose up -d --no-deps commerce-api
+              docker compose up -d --no-deps commerce-web
+
+              echo "Waiting for CommerceManager..."
+              sleep 15
+
+              docker compose ps commerce-api commerce-web
+          EOF
+
+      - name: Verify Web
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            https://pinarcarsihome.com/)
+
+          echo "Production WEB HTTP status: $STATUS"
+
+          if [ "$STATUS" != "200" ]; then
+            echo "WEB production verification failed."
+            exit 1
+          fi
+
+      - name: Verify API protection
+        run: |
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" \
+            https://apiyesilpinar.com/api/dashboard/trendyol)
+
+          echo "Production API unauthenticated HTTP status: $STATUS"
+
+          if [ "$STATUS" != "401" ]; then
+            echo "API security verification failed."
+            exit 1
+          fi

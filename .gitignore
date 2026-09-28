@@ -5,3 +5,16 @@
 *.suo
 .env
 appsettings.Development.json
+
+# macOS
+.DS_Store
+**/.DS_Store
+
+# Secrets / environment
+.env
+.env.*
+!.env.example
+
+# Local backups
+*.bak
+*.bak-*
