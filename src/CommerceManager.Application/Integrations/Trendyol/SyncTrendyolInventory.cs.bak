@@ -1,0 +1,30 @@
+using MediatR;
+
+namespace CommerceManager.Application.Integrations.Trendyol;
+
+public sealed record TrendyolInventorySyncResult(
+    int Received,
+    int Inserted,
+    int Updated,
+    int Unchanged);
+
+public interface ITrendyolInventoryStore
+{
+    Task<TrendyolInventorySyncResult> SyncAsync(
+        CancellationToken cancellationToken);
+}
+
+public sealed record SyncTrendyolInventory
+    : IRequest<TrendyolInventorySyncResult>;
+
+public sealed class SyncTrendyolInventoryHandler(
+    ITrendyolInventoryStore store)
+    : IRequestHandler<
+        SyncTrendyolInventory,
+        TrendyolInventorySyncResult>
+{
+    public Task<TrendyolInventorySyncResult> Handle(
+        SyncTrendyolInventory request,
+        CancellationToken cancellationToken)
+        => store.SyncAsync(cancellationToken);
+}

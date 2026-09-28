@@ -1,0 +1,67 @@
+namespace CommerceManager.Web.Models;
+
+public sealed class MarketplaceIndexViewModel
+{
+    public string ChannelName { get; set; } = "Trendyol";
+    public bool IsActive { get; set; }
+
+    public DateTimeOffset? LastSuccessfulSyncAt { get; set; }
+    public DateTimeOffset? LastFailedSyncAt { get; set; }
+    public string? LastError { get; set; }
+    public DateTimeOffset? LastOrderSyncAt { get; set; }
+    public DateTimeOffset? LastReturnSyncAt { get; set; }
+    public DateTimeOffset? LastProductSyncAt { get; set; }
+    public DateTimeOffset? LastInventorySyncAt { get; set; }
+
+    public int ProductCount { get; set; }
+    public int StockCount { get; set; }
+    public int TotalStockQuantity { get; set; }
+
+    public string? Message { get; set; }
+    public bool IsError { get; set; }
+}
+
+public sealed class OrderSyncResult
+{
+    public int Received { get; set; }
+    public int Inserted { get; set; }
+    public int Updated { get; set; }
+}
+
+public sealed class ProductSyncResult
+{
+    public int Received { get; set; }
+    public int Inserted { get; set; }
+    public int Updated { get; set; }
+    public int Unchanged { get; set; }
+}
+
+public sealed class InventorySyncResult
+{
+    public int Received { get; set; }
+    public int Inserted { get; set; }
+    public int Skipped { get; set; }
+}
+
+public sealed class TrendyolIntegrationStatusResult
+{
+    public bool IsConnected { get; set; }
+    public DateTimeOffset? LastSuccessfulSyncAt { get; set; }
+    public DateTimeOffset? LastFailedSyncAt { get; set; }
+    public string? LastError { get; set; }
+    public DateTimeOffset? LastOrderSyncAt { get; set; }
+    public DateTimeOffset? LastReturnSyncAt { get; set; }
+    public DateTimeOffset? LastProductSyncAt { get; set; }
+    public DateTimeOffset? LastInventorySyncAt { get; set; }
+    public DateTimeOffset? UpdatedAt { get; set; }
+}
+
+public sealed class ReturnSyncResult
+{
+    public int Received { get; set; }
+    public int Inserted { get; set; }
+    public int Updated { get; set; }
+    public int StockApplied { get; set; }
+    public int OrderNotFound { get; set; }
+    public int OrderItemNotFound { get; set; }
+}

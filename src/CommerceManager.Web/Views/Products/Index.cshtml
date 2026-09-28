@@ -1,0 +1,251 @@
+@model CommerceManager.Web.Models.ProductPage
+
+@{
+    ViewData["Title"] = "Ürünler";
+
+    string? search = ViewBag.Search as string;
+
+    var totalPages = Model.Size > 0
+        ? (int)Math.Ceiling(Model.Total / (double)Model.Size)
+        : 0;
+}
+
+<div class="page-heading">
+    <div>
+        <h1>Ürünler</h1>
+        <p>Trendyol ürün kataloğunuzu görüntüleyin ve takip edin.</p>
+    </div>
+
+    <span class="channel-badge">
+        Trendyol
+    </span>
+</div>
+
+@if (ViewBag.ApiError is not null)
+{
+    <div class="alert-error">
+        @ViewBag.ApiError
+    </div>
+}
+
+<div class="summary-grid">
+
+    <div class="summary-card">
+        <span>Toplam Ürün</span>
+        <strong>@(Model.WithStockCount + Model.WithoutStockCount)</strong>
+        <small>Trendyol kataloğu</small>
+    </div>
+
+    <div class="summary-card">
+        <span>Stok Kaydı Olan</span>
+        <strong>@Model.WithStockCount</strong>
+        <small>ChannelStock eşleşmesi</small>
+    </div>
+
+    <div class="summary-card">
+        <span>Stok Kaydı Olmayan</span>
+        <strong>@Model.WithoutStockCount</strong>
+        <small>Katalogda mevcut</small>
+    </div>
+
+</div>
+
+<div class="panel">
+
+    <div class="panel-header">
+        <div>
+            <h2>Ürün Kataloğu</h2>
+            <p>@Model.Total kayıt bulundu</p>
+        </div>
+
+        <form method="get"
+              action="/Products"
+              class="filters">
+
+            <input type="text"
+                   name="search"
+                   value="@search"
+                   placeholder="Ürün, barkod veya stok kodu..."
+                   class="filter-input" />
+
+            <input type="hidden"
+                   name="size"
+                   value="@Model.Size" />
+
+            <button type="submit"
+                    class="filter-button">
+                Ara
+            </button>
+
+            @if (!string.IsNullOrWhiteSpace(search))
+            {
+                <a href="/Products"
+                   class="filter-clear">
+                    Temizle
+                </a>
+            }
+
+        </form>
+    </div>
+
+    <div class="table-wrap">
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Ürün</th>
+                    <th>Stok Kodu</th>
+                    <th>Barkod</th>
+                    <th>Trendyol Ürün ID</th>
+                    <th>Kanal</th>
+                    <th>Stok</th>
+                    <th>Durum</th>
+                    <th>Güncelleme</th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            @if (Model.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="8"
+                        class="empty">
+                        Ürün bulunamadı.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Model.Items)
+                {
+                    <tr>
+
+                        <td>
+                            <div class="stock-product">
+
+                                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl"
+                                         alt="@item.Name"
+                                         class="stock-product-image" />
+                                }
+                                else
+                                {
+                                    <div class="stock-product-image stock-image-placeholder">
+                                        —
+                                    </div>
+                                }
+
+                                <div>
+                                    <a href="@Url.Action("Details", "Products", new { id = item.Id })"
+                                       class="product-name-link">
+                                        <strong class="stock-product-name">
+                                            @item.Name
+                                        </strong>
+                                    </a>
+
+                                    @if (!string.IsNullOrWhiteSpace(item.ProductMainId))
+                                    {
+                                        <small class="product-main-id">
+                                            @item.ProductMainId
+                                        </small>
+                                    }
+                                </div>
+
+                            </div>
+                        </td>
+
+                        <td>
+                            @(string.IsNullOrWhiteSpace(item.StockCode)
+                                ? "—"
+                                : item.StockCode)
+                        </td>
+
+                        <td class="stock-barcode"
+                            title="@item.Barcode">
+                            @item.Barcode
+                        </td>
+
+                        <td>
+                            @(string.IsNullOrWhiteSpace(item.ExternalProductId)
+                                ? "—"
+                                : item.ExternalProductId)
+                        </td>
+
+                        <td>
+                            <span class="channel-badge compact">
+                                Trendyol
+                            </span>
+                        </td>
+
+                        <td>
+                            <strong class="stock-quantity">
+                                @item.StockText
+                            </strong>
+                        </td>
+
+                        <td>
+                            <span class="status @item.StockStatusCss">
+                                @item.StockStatusText
+                            </span>
+                        </td>
+
+                        <td class="order-date stock-table-date">
+                            @(item.UpdatedAt
+                                .ToLocalTime()
+                                .ToString("dd.MM.yyyy HH:mm"))
+                        </td>
+
+                    </tr>
+                }
+            }
+
+            </tbody>
+        </table>
+
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <div class="pagination">
+
+            <span>
+                Sayfa @(Model.Page + 1) / @totalPages
+                · @Model.Total kayıt
+            </span>
+
+            <div>
+
+                @if (Model.Page > 0)
+                {
+                    <a href="@Url.Action("Index", "Products",
+                                 new
+                                 {
+                                     page = Model.Page - 1,
+                                     size = Model.Size,
+                                     search
+                                 })">
+                        ← Önceki
+                    </a>
+                }
+
+                @if (Model.Page + 1 < totalPages)
+                {
+                    <a href="@Url.Action("Index", "Products",
+                                 new
+                                 {
+                                     page = Model.Page + 1,
+                                     size = Model.Size,
+                                     search
+                                 })">
+                        Sonraki →
+                    </a>
+                }
+
+            </div>
+
+        </div>
+    }
+
+</div>

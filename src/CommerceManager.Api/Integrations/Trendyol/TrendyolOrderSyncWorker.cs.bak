@@ -1,0 +1,46 @@
+using CommerceManager.Application.Integrations.Trendyol;
+using MediatR;
+
+namespace CommerceManager.Api.Integrations.Trendyol;
+
+public sealed class TrendyolOrderSyncWorker(
+    IServiceScopeFactory scopeFactory,
+    IConfiguration configuration,
+    ILogger<TrendyolOrderSyncWorker> logger) : BackgroundService
+{
+    protected override async Task ExecuteAsync(CancellationToken stoppingToken)
+    {
+        if (!configuration.GetValue<bool>("Trendyol:BackgroundSyncEnabled"))
+        {
+            logger.LogInformation("Trendyol automatic order sync is disabled.");
+            return;
+        }
+
+        var minutes = configuration.GetValue<int?>("Trendyol:SyncIntervalMinutes") ?? 5;
+        if (minutes is < 5 or > 1440)
+            throw new InvalidOperationException("Trendyol:SyncIntervalMinutes must be between 5 and 1440.");
+
+        using var timer = new PeriodicTimer(TimeSpan.FromMinutes(minutes));
+        do
+        {
+            try
+            {
+                using var scope = scopeFactory.CreateScope();
+                var sender = scope.ServiceProvider.GetRequiredService<ISender>();
+                // Read the last 24 hours with cursor pagination. Upsert is repeatable.
+                var result = await sender.Send(new BackfillTrendyolOrders(1), stoppingToken);
+                logger.LogInformation(
+                    "Trendyol orders synced: received={Received}, inserted={Inserted}, updated={Updated}",
+                    result.Received, result.Inserted, result.Updated);
+            }
+            catch (OperationCanceledException) when (stoppingToken.IsCancellationRequested)
+            {
+                break;
+            }
+            catch (Exception exception)
+            {
+                logger.LogError(exception, "Trendyol automatic order sync failed; will retry at the next interval.");
+            }
+        } while (await timer.WaitForNextTickAsync(stoppingToken));
+    }
+}

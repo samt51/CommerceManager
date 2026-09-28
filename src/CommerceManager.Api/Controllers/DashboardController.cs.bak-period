@@ -1,0 +1,23 @@
+using CommerceManager.Application.Dashboard;
+using MediatR;
+using Microsoft.AspNetCore.Mvc;
+
+namespace CommerceManager.Api.Controllers;
+
+[ApiController]
+[Route("api/dashboard")]
+public sealed class DashboardController(
+    ISender sender)
+    : ControllerBase
+{
+    [HttpGet("trendyol")]
+    public async Task<IActionResult> Trendyol(
+        CancellationToken cancellationToken)
+    {
+var result = await sender.Send(
+            new GetTrendyolDashboard(),
+            cancellationToken);
+
+        return Ok(result);
+    }
+}

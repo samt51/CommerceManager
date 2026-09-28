@@ -1,0 +1,264 @@
+@model CommerceManager.Web.Models.ReturnPage
+
+@{
+    ViewData["Title"] = "İadeler";
+
+    int? selectedStatus = ViewBag.Status as int?;
+
+    var accepted =
+        Model.Items.Count(x => x.Status == 2);
+
+    var pending =
+        Model.Items.Count(x => x.Status == 1);
+}
+
+<div class="returns-page">
+
+<div class="page-heading">
+    <div>
+        <h1>İade Yönetimi</h1>
+        <p>
+            Pazaryerlerinden gelen iade taleplerini
+            görüntüleyin ve takip edin.
+        </p>
+    </div>
+
+    <div class="market-badge">
+        Trendyol
+    </div>
+</div>
+
+@if (ViewBag.ApiError is not null)
+{
+    <div class="alert-error">
+        @ViewBag.ApiError
+    </div>
+}
+
+<div class="summary-grid returns-summary-grid">
+
+    <div class="summary-card">
+        <span>Toplam İade</span>
+        <strong>@Model.Total</strong>
+        <small>Tüm iade kayıtları</small>
+    </div>
+
+    <div class="summary-card">
+        <span>Bu Sayfada Bekleyen</span>
+        <strong>@pending</strong>
+        <small>İşlem bekleyen iadeler</small>
+    </div>
+
+    <div class="summary-card">
+        <span>Bu Sayfada Kabul</span>
+        <strong>@accepted</strong>
+        <small>Stoğa geri alınanlar</small>
+    </div>
+
+</div>
+
+<div class="panel returns-panel">
+
+    <div class="panel-header">
+
+        <div>
+            <h2>İade Talepleri</h2>
+            <p>@Model.Total kayıt bulundu</p>
+        </div>
+
+        <form method="get"
+              class="filters">
+
+            <select name="status">
+                <option value="">
+                    Tüm Durumlar
+                </option>
+
+                <option value="1"
+                        selected="@(selectedStatus == 1)">
+                    Bekliyor
+                </option>
+
+                <option value="2"
+                        selected="@(selectedStatus == 2)">
+                    Kabul Edildi
+                </option>
+
+                <option value="3"
+                        selected="@(selectedStatus == 3)">
+                    Reddedildi
+                </option>
+
+                <option value="4"
+                        selected="@(selectedStatus == 4)">
+                    İptal Edildi
+                </option>
+            </select>
+
+            <button class="filter-button"
+                    type="submit">
+                Filtrele
+            </button>
+
+        </form>
+
+    </div>
+
+    <div class="table-wrap">
+
+        <table>
+
+            <thead>
+            <tr>
+                <th>Sipariş</th>
+                <th>Ürün</th>
+                <th>Barkod</th>
+                <th>Adet</th>
+                <th>Kanal</th>
+                <th>Durum</th>
+                <th>Stok</th>
+                <th>Son Güncelleme</th>
+                <th></th>
+            </tr>
+            </thead>
+
+            <tbody>
+
+            @if (Model.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="9"
+                        class="empty">
+                        İade kaydı bulunamadı.
+                    </td>
+                </tr>
+            }
+
+            @foreach (var item in Model.Items)
+            {
+                <tr>
+                    <td>
+                        <a href="@Url.Action("Details", "Returns", new { id = item.Id })"
+                           class="order-number return-detail-link">
+                            #@item.OrderNumber
+                        </a>
+                    </td>
+
+                    <td class="product-cell">
+                        <div class="product-info">
+                            @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                            {
+                                <img class="product-image"
+                                     src="@item.ImageUrl"
+                                     alt="@item.ProductName"
+                                     loading="lazy" />
+                            }
+                            else
+                            {
+                                <div class="product-image-placeholder">
+                                    📦
+                                </div>
+                            }
+
+                            <span class="product-name">
+                                @item.ProductName
+                            </span>
+                        </div>
+                    </td>
+
+                    <td>
+                        <span class="barcode">
+                            @item.Barcode
+                        </span>
+                    </td>
+
+                    <td>
+                        @item.Quantity
+                    </td>
+
+                    <td>
+                        <span class="channel-badge">
+                            @item.ChannelText
+                        </span>
+                    </td>
+
+                    <td>
+                        <span class="status @item.StatusCss">
+                            @item.StatusText
+                        </span>
+                    </td>
+
+                    <td>
+                        @if (item.StockApplied)
+                        {
+                            <span class="stock-ok">
+                                ✓ Stoğa işlendi
+                            </span>
+                        }
+                        else
+                        {
+                            <span class="stock-wait">
+                                —
+                            </span>
+                        }
+                    </td>
+
+                    <td>
+                        @(item.ExternalLastModifiedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm"))
+                    </td>
+
+                    <td class="return-action-cell">
+                        <a href="@Url.Action("Details", "Returns", new { id = item.Id })"
+                           class="order-detail-button">
+                            Detay →
+                        </a>
+                    </td>
+                </tr>
+            }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+    @{
+        var totalPages =
+            Model.Size > 0
+                ? (int)Math.Ceiling(
+                    Model.Total / (double)Model.Size)
+                : 0;
+    }
+
+    @if (totalPages > 1)
+    {
+        <div class="pagination">
+
+            <span>
+                Sayfa @(Model.Page + 1) / @totalPages
+            </span>
+
+            <div>
+                @if (Model.Page > 0)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@(Model.Page - 1)"
+                       asp-route-status="@selectedStatus">
+                        ← Önceki
+                    </a>
+                }
+
+                @if (Model.Page + 1 < totalPages)
+                {
+                    <a asp-action="Index"
+                       asp-route-page="@(Model.Page + 1)"
+                       asp-route-status="@selectedStatus">
+                        Sonraki →
+                    </a>
+                }
+            </div>
+
+        </div>
+    }
+
+</div>

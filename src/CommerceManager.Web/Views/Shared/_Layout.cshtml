@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport"
+          content="width=device-width, initial-scale=1" />
+
+    <title>@ViewData["Title"] - TicaretPanel</title>
+
+    <link rel="stylesheet"
+          href="~/css/site.css"
+          asp-append-version="true" />
+</head>
+
+@{
+    var currentController =
+        ViewContext.RouteData.Values["controller"]?.ToString();
+}
+
+<body>
+<div class="app-shell">
+
+    <aside class="sidebar">
+
+        <div class="brand">
+            <div class="brand-mark">T</div>
+
+            <div>
+                <strong>TicaretPanel</strong>
+                <span>E-Ticaret Yönetimi</span>
+            </div>
+        </div>
+
+        <nav class="nav">
+
+            <a href="/">
+                <span class="nav-icon">⌂</span>
+                Dashboard
+            </a>
+
+            <a href="/Products"
+               class="@(currentController == "Products" ? "active" : null)">
+                <span class="nav-icon">▦</span>
+                Ürünler
+            </a>
+
+            <a href="/Orders" class="@(currentController == "Orders" ? "active" : null)">
+                <span class="nav-icon">▣</span>
+                Siparişler
+            </a>
+
+            <a href="/Returns"
+               class="@(currentController == "Returns" ? "active" : null)">
+                <span class="nav-icon">↩</span>
+                İadeler
+            </a>
+
+            <a href="/Stocks"
+               class="@(currentController == "Stocks" ? "active" : null)">
+                <span class="nav-icon">▤</span>
+                Stok Yönetimi
+            </a>
+
+            <a href="/Marketplaces"
+               class="@(currentController == "Marketplaces" ? "active" : null)">
+                <span class="nav-icon">◉</span>
+                Pazaryerleri
+            </a>
+
+            <a href="#">
+                <span class="nav-icon">▥</span>
+                Raporlar
+            </a>
+
+            <div class="nav-separator"></div>
+
+            <a href="#">
+                <span class="nav-icon">⚙</span>
+                Ayarlar
+            </a>
+
+        </nav>
+
+        <div class="sidebar-footer">
+            <div class="avatar">A</div>
+            <div>
+                <strong>Admin Kullanıcı</strong>
+                <span>admin@ticaretpanel.com</span>
+            </div>
+        </div>
+
+    </aside>
+
+    <main class="main">
+
+        <header class="topbar">
+            <div>
+                <div class="topbar-title">
+                    @ViewData["Title"]
+                </div>
+
+                <div class="topbar-subtitle">
+                    E-Ticaret Yönetim Paneli
+                </div>
+            </div>
+
+            <div class="top-actions">
+                <button type="button"
+                        class="icon-button">⌕</button>
+
+                <button type="button"
+                        class="icon-button">♢</button>
+            </div>
+        </header>
+
+        <section class="content">
+            @RenderBody()
+        </section>
+
+    </main>
+
+</div>
+</body>
+</html>

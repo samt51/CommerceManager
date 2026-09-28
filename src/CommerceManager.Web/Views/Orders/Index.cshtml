@@ -1,0 +1,254 @@
+@model CommerceManager.Web.Models.OrderPage
+
+@{
+    ViewData["Title"] = "Siparişler";
+
+    string? selectedStatus = ViewBag.Status as string;
+
+    var pageTotal = Model.Items.Sum(x => x.TotalAmount);
+    var pageItemCount = Model.Items.Sum(x => x.ItemCount);
+
+    var totalPages = Model.Size > 0
+        ? (int)Math.Ceiling(Model.Total / (double)Model.Size)
+        : 0;
+}
+
+<div class="page-heading orders-page-heading">
+    <div>
+        <h1>Siparişler</h1>
+        <p>Trendyol siparişlerinizi görüntüleyin ve takip edin.</p>
+    </div>
+
+    <span class="channel-badge">
+        Trendyol
+    </span>
+</div>
+
+@if (ViewBag.ApiError is not null)
+{
+    <div class="alert-error">
+        @ViewBag.ApiError
+    </div>
+}
+
+<div class="orders-page"><div class="summary-grid">
+
+    <div class="summary-card">
+        <span>Toplam Sipariş</span>
+        <strong>@Model.Total</strong>
+        <small>Trendyol</small>
+    </div>
+
+    <div class="summary-card">
+        <span>Bu Sayfadaki Ürün</span>
+        <strong>@pageItemCount</strong>
+        <small>@Model.Items.Count sipariş</small>
+    </div>
+
+    <div class="summary-card">
+        <span>Bu Sayfanın Tutarı</span>
+        <strong>@pageTotal.ToString("N2") ₺</strong>
+        <small>Sipariş toplamı</small>
+    </div>
+
+</div>
+
+<div class="panel orders-panel">
+
+    <div class="panel-header">
+        <div>
+            <h2>Sipariş Listesi</h2>
+            <p>@Model.Total kayıt bulundu</p>
+        </div>
+
+        <form method="get"
+              action="/Orders"
+              class="filters">
+
+            <select name="status"
+                    class="filter-select">
+
+                <option value="">
+                    Tüm Durumlar
+                </option>
+
+                <option value="Created"
+                        selected="@(selectedStatus == "Created")">
+                    Oluşturuldu
+                </option>
+
+                <option value="Picking"
+                        selected="@(selectedStatus == "Picking")">
+                    Hazırlanıyor
+                </option>
+
+                <option value="Invoiced"
+                        selected="@(selectedStatus == "Invoiced")">
+                    Faturalandı
+                </option>
+
+                <option value="Shipped"
+                        selected="@(selectedStatus == "Shipped")">
+                    Kargoda
+                </option>
+
+                <option value="Delivered"
+                        selected="@(selectedStatus == "Delivered")">
+                    Teslim Edildi
+                </option>
+
+                <option value="Cancelled"
+                        selected="@(selectedStatus == "Cancelled")">
+                    İptal Edildi
+                </option>
+
+                <option value="Returned"
+                        selected="@(selectedStatus == "Returned")">
+                    İade Edildi
+                </option>
+
+            </select>
+
+            <input type="hidden"
+                   name="size"
+                   value="@Model.Size" />
+
+            <button type="submit"
+                    class="filter-button">
+                Filtrele
+            </button>
+
+        </form>
+    </div>
+
+    <div class="table-wrap">
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Sipariş No</th>
+                    <th>Tarih</th>
+                    <th>Kanal</th>
+                    <th>Ürün</th>
+                    <th>Tutar</th>
+                    <th>Durum</th>
+                    <th></th>
+                </tr>
+            </thead>
+
+            <tbody>
+
+            @if (Model.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="7"
+                        class="empty">
+                        Sipariş bulunamadı.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>
+                            <a href="@Url.Action("Details", "Orders", new { id = item.Id })"
+                               class="order-number return-detail-link">
+                                #@item.OrderNumber
+                            </a>
+
+                            <div class="order-external-id">
+                                Paket: @item.ExternalOrderId
+                            </div>
+                        </td>
+
+                        <td class="order-date">
+                            @(item.OrderedAt
+                                .ToLocalTime()
+                                .ToString("dd.MM.yyyy HH:mm"))
+                        </td>
+
+                        <td>
+                            <span class="channel-badge compact">
+                                Trendyol
+                            </span>
+                        </td>
+
+                        <td>
+                            <strong>
+                                @item.ItemCount ürün
+                            </strong>
+                        </td>
+
+                        <td>
+                            <strong class="order-amount">
+                                @item.TotalAmount.ToString("N2") ₺
+                            </strong>
+                        </td>
+
+                        <td>
+                            <span class="status @item.StatusCss">
+                                @item.StatusText
+                            </span>
+                        </td>
+
+                        <td>
+                            <a href="@Url.Action("Details", "Orders", new { id = item.Id })"
+                               class="order-detail-button">
+                                Detay →
+                            </a>
+                        </td>
+                    </tr>
+                }
+            }
+
+            </tbody>
+        </table>
+
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <div class="pagination">
+
+            <span>
+                Sayfa @(Model.Page + 1) / @totalPages
+                · @Model.Total kayıt
+            </span>
+
+            <div>
+
+                @if (Model.Page > 0)
+                {
+                    <a href="@Url.Action("Index", "Orders",
+                                new
+                                {
+                                    page = Model.Page - 1,
+                                    size = Model.Size,
+                                    status = selectedStatus
+                                })">
+                        ← Önceki
+                    </a>
+                }
+
+                @if (Model.Page + 1 < totalPages)
+                {
+                    <a href="@Url.Action("Index", "Orders",
+                                new
+                                {
+                                    page = Model.Page + 1,
+                                    size = Model.Size,
+                                    status = selectedStatus
+                                })">
+                        Sonraki →
+                    </a>
+                }
+
+            </div>
+
+        </div>
+    }
+
+</div>
+</div>

@@ -1,0 +1,13 @@
+**/bin/
+**/obj/
+.git/
+.idea/
+.vs/
+.vscode/
+.DS_Store
+deploy-backup/
+*.bak
+*.user
+*.suo
+.env
+.env.*

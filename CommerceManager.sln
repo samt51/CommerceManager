@@ -1,0 +1,48 @@
+Microsoft Visual Studio Solution File, Format Version 12.00
+# Visual Studio Version 17
+VisualStudioVersion = 17.0.31903.59
+MinimumVisualStudioVersion = 10.0.40219.1
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommerceManager.Domain", "src\CommerceManager.Domain\CommerceManager.Domain.csproj", "{34256984-0022-4AC6-A3A6-278A78AFA73D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommerceManager.Application", "src\CommerceManager.Application\CommerceManager.Application.csproj", "{71F2BF64-558F-4246-B983-2066E0DF8942}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommerceManager.Infrastructure", "src\CommerceManager.Infrastructure\CommerceManager.Infrastructure.csproj", "{77E63DC1-57EA-48DD-B3A2-8A7B64F42CD5}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommerceManager.Api", "src\CommerceManager.Api\CommerceManager.Api.csproj", "{F7100187-EDC4-4839-A259-8CF6369B03CA}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommerceManager.Web", "src\CommerceManager.Web\CommerceManager.Web.csproj", "{C984EACF-694B-4D03-BF0C-1107F3870B8D}"
+EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "CommerceManager.Mobile", "src\CommerceManager.Mobile\CommerceManager.Mobile.csproj", "{32695C8A-CCA6-4CD2-823D-9E48095F904F}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Any CPU = Debug|Any CPU
+		Release|Any CPU = Release|Any CPU
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{34256984-0022-4AC6-A3A6-278A78AFA73D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{34256984-0022-4AC6-A3A6-278A78AFA73D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{34256984-0022-4AC6-A3A6-278A78AFA73D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{34256984-0022-4AC6-A3A6-278A78AFA73D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{71F2BF64-558F-4246-B983-2066E0DF8942}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{71F2BF64-558F-4246-B983-2066E0DF8942}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{71F2BF64-558F-4246-B983-2066E0DF8942}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{71F2BF64-558F-4246-B983-2066E0DF8942}.Release|Any CPU.Build.0 = Release|Any CPU
+		{77E63DC1-57EA-48DD-B3A2-8A7B64F42CD5}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{77E63DC1-57EA-48DD-B3A2-8A7B64F42CD5}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{77E63DC1-57EA-48DD-B3A2-8A7B64F42CD5}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{77E63DC1-57EA-48DD-B3A2-8A7B64F42CD5}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F7100187-EDC4-4839-A259-8CF6369B03CA}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F7100187-EDC4-4839-A259-8CF6369B03CA}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F7100187-EDC4-4839-A259-8CF6369B03CA}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F7100187-EDC4-4839-A259-8CF6369B03CA}.Release|Any CPU.Build.0 = Release|Any CPU
+		{C984EACF-694B-4D03-BF0C-1107F3870B8D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{C984EACF-694B-4D03-BF0C-1107F3870B8D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{C984EACF-694B-4D03-BF0C-1107F3870B8D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{C984EACF-694B-4D03-BF0C-1107F3870B8D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{32695C8A-CCA6-4CD2-823D-9E48095F904F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{32695C8A-CCA6-4CD2-823D-9E48095F904F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{32695C8A-CCA6-4CD2-823D-9E48095F904F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{32695C8A-CCA6-4CD2-823D-9E48095F904F}.Release|Any CPU.Build.0 = Release|Any CPU
+	EndGlobalSection
+EndGlobal

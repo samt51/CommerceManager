@@ -1,0 +1,203 @@
+@model CommerceManager.Web.Models.ProductDetails
+
+@{
+    ViewData["Title"] = "Ürün Detayı";
+}
+
+<div class="return-detail-heading product-detail-heading">
+    <div>
+        <a href="/Products" class="product-detail-back">
+            ← Ürünlere Dön
+        </a>
+
+        <h1>Ürün Detayı</h1>
+        <p>Trendyol ürün ve kanal stok bilgilerini görüntüleyin.</p>
+    </div>
+
+    <div class="product-detail-badges">
+        <span class="channel-badge">Trendyol</span>
+
+        <span class="status @Model.StockStatusCss">
+            @Model.StockStatusText
+        </span>
+    </div>
+</div>
+
+@if (ViewBag.ApiError is not null)
+{
+    <div class="alert-error">
+        @ViewBag.ApiError
+    </div>
+}
+
+<div class="product-detail-grid">
+
+    <div class="product-detail-main">
+
+        <div class="detail-card">
+
+            <div class="detail-card-header">
+                <div>
+                    <h2>Ürün Bilgileri</h2>
+                    <p>Trendyol katalog bilgileri</p>
+                </div>
+            </div>
+
+            <div class="product-detail-product">
+
+                <div class="product-detail-image-wrap">
+
+                    @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+                    {
+                        <img src="@Model.ImageUrl"
+                             alt="@Model.Name"
+                             class="product-detail-image" />
+                    }
+                    else
+                    {
+                        <div class="product-detail-image product-detail-placeholder">
+                            Görsel Yok
+                        </div>
+                    }
+
+                </div>
+
+                <div class="product-detail-content">
+
+                    <span class="channel-badge compact">
+                        Trendyol
+                    </span>
+
+                    <h2>
+                        @(string.IsNullOrWhiteSpace(Model.Name)
+                            ? "Ürün"
+                            : Model.Name)
+                    </h2>
+
+                    @if (!string.IsNullOrWhiteSpace(Model.ProductMainId))
+                    {
+                        <div class="product-detail-main-id">
+                            @Model.ProductMainId
+                        </div>
+                    }
+
+                    <div class="product-detail-stock-box">
+
+                        <div>
+                            <span>Kanal Stoku</span>
+                            <strong>@Model.StockText</strong>
+                        </div>
+
+                        <span class="status @Model.StockStatusCss">
+                            @Model.StockStatusText
+                        </span>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+            <div class="detail-fields product-detail-fields">
+
+                <div class="detail-field">
+                    <span>Stok Kodu</span>
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(Model.StockCode)
+                            ? "—"
+                            : Model.StockCode)
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span>Barkod</span>
+                    <strong class="product-detail-code">
+                        @Model.Barcode
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span>Trendyol Ürün ID</span>
+                    <strong>
+                        @(string.IsNullOrWhiteSpace(Model.ExternalProductId)
+                            ? "—"
+                            : Model.ExternalProductId)
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span>Product Main ID</span>
+                    <strong class="product-detail-code">
+                        @(string.IsNullOrWhiteSpace(Model.ProductMainId)
+                            ? "—"
+                            : Model.ProductMainId)
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <aside class="product-detail-side">
+
+        <div class="detail-card">
+
+            <div class="detail-card-header">
+                <div>
+                    <h2>Stok Özeti</h2>
+                    <p>CommerceManager kanal stoğu</p>
+                </div>
+            </div>
+
+            <div class="product-stock-summary">
+
+                <span>Mevcut Stok</span>
+
+                <strong>
+                    @Model.StockText
+                </strong>
+
+                <span class="status @Model.StockStatusCss">
+                    @Model.StockStatusText
+                </span>
+
+            </div>
+
+            <div class="product-detail-meta">
+
+                <div>
+                    <span>Ürün Son Güncelleme</span>
+                    <strong>
+                        @Model.ProductUpdatedAt
+                            .ToLocalTime()
+                            .ToString("dd.MM.yyyy HH:mm")
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Stok Son Güncelleme</span>
+
+                    @if (Model.StockUpdatedAt.HasValue)
+                    {
+                        <strong>
+                            @Model.StockUpdatedAt.Value
+                                .ToLocalTime()
+                                .ToString("dd.MM.yyyy HH:mm")
+                        </strong>
+                    }
+                    else
+                    {
+                        <strong>Stok kaydı yok</strong>
+                    }
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </aside>
+
+</div>

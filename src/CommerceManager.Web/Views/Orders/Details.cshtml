@@ -1,0 +1,238 @@
+@model CommerceManager.Web.Models.OrderDetails
+
+@{
+    ViewData["Title"] = "Sipariş Detayı";
+
+    var totalQuantity = Model.Items.Sum(x => x.Quantity);
+}
+
+<div class="page-heading">
+    <div>
+        <a href="/Orders" class="back-link">
+            ← Siparişlere Dön
+        </a>
+
+        <h1>Sipariş Detayı</h1>
+
+        @if (!string.IsNullOrWhiteSpace(Model.OrderNumber))
+        {
+            <p>#@Model.OrderNumber</p>
+        }
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.Status))
+    {
+        <span class="status @Model.StatusCss">
+            @Model.StatusText
+        </span>
+    }
+</div>
+
+@if (ViewBag.ApiError is not null)
+{
+    <div class="alert-error">
+        @ViewBag.ApiError
+    </div>
+}
+
+<div class="order-detail-layout">
+
+    <div class="order-detail-main">
+
+        <div class="panel">
+
+            <div class="panel-header">
+                <div>
+                    <h2>Sipariş Ürünleri</h2>
+                    <p>
+                        @Model.Items.Count kalem ·
+                        @totalQuantity adet ürün
+                    </p>
+                </div>
+
+                <span class="channel-badge">
+                    Trendyol
+                </span>
+            </div>
+
+            <div class="order-products">
+
+                @if (Model.Items.Count == 0)
+                {
+                    <div class="empty">
+                        Sipariş ürünü bulunamadı.
+                    </div>
+                }
+                else
+                {
+                    foreach (var item in Model.Items)
+                    {
+                        <div class="order-product">
+
+                            <div class="order-product-image">
+
+                                @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
+                                {
+                                    <img src="@item.ImageUrl"
+                                         alt="@item.ProductName" />
+                                }
+                                else
+                                {
+                                    <div class="product-image-placeholder">
+                                        Ürün
+                                    </div>
+                                }
+
+                            </div>
+
+                            <div class="order-product-info">
+
+                                <strong>
+                                    @item.ProductName
+                                </strong>
+
+                                <span>
+                                    Barkod:
+                                    @(string.IsNullOrWhiteSpace(item.Barcode)
+                                        ? "-"
+                                        : item.Barcode)
+                                </span>
+
+                                <span>
+                                    Satır ID: @item.ExternalLineId
+                                </span>
+
+                            </div>
+
+                            <div class="order-product-price">
+
+                                <div>
+                                    <span>Adet</span>
+                                    <strong>@item.Quantity</strong>
+                                </div>
+
+                                <div>
+                                    <span>Birim Fiyat</span>
+                                    <strong>
+                                        @item.UnitPrice.ToString("N2") ₺
+                                    </strong>
+                                </div>
+
+                                <div>
+                                    <span>Toplam</span>
+                                    <strong>
+                                        @item.TotalPrice.ToString("N2") ₺
+                                    </strong>
+                                </div>
+
+                            </div>
+
+                        </div>
+                    }
+                }
+
+            </div>
+
+        </div>
+
+        <div class="panel order-info-panel">
+
+            <div class="panel-header">
+                <div>
+                    <h2>Sipariş Bilgileri</h2>
+                    <p>Trendyol sipariş ve paket bilgileri</p>
+                </div>
+            </div>
+
+            <div class="order-info-grid">
+
+                <div>
+                    <span>Sipariş No</span>
+                    <strong>
+                        #@(Model.OrderNumber ?? "-")
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Paket ID</span>
+                    <strong>
+                        @(Model.ExternalOrderId ?? "-")
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Sipariş Tarihi</span>
+                    <strong>
+                        @(Model.OrderedAt
+                            .ToLocalTime()
+                            .ToString("dd.MM.yyyy HH:mm"))
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Son Güncelleme</span>
+                    <strong>
+                        @(Model.ExternalLastModifiedAt.HasValue
+                            ? Model.ExternalLastModifiedAt.Value
+                                .ToLocalTime()
+                                .ToString("dd.MM.yyyy HH:mm")
+                            : "-")
+                    </strong>
+                </div>
+
+                <div>
+                    <span>Kanal</span>
+                    <strong>Trendyol</strong>
+                </div>
+
+                <div>
+                    <span>Durum</span>
+                    <strong>
+                        @Model.StatusText
+                    </strong>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <aside class="order-summary-card">
+
+        <h2>Sipariş Özeti</h2>
+
+        <div class="order-summary-row">
+            <span>Ürün Kalemi</span>
+            <strong>@Model.Items.Count</strong>
+        </div>
+
+        <div class="order-summary-row">
+            <span>Toplam Adet</span>
+            <strong>@totalQuantity</strong>
+        </div>
+
+        <div class="order-summary-row">
+            <span>Kanal</span>
+            <span class="channel-badge compact">
+                Trendyol
+            </span>
+        </div>
+
+        <div class="order-summary-row">
+            <span>Durum</span>
+            <span class="status @Model.StatusCss">
+                @Model.StatusText
+            </span>
+        </div>
+
+        <div class="order-summary-total">
+            <span>Sipariş Toplamı</span>
+            <strong>
+                @Model.TotalAmount.ToString("N2") ₺
+            </strong>
+        </div>
+
+    </aside>
+
+</div>

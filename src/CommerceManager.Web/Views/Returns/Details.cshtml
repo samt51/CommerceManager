@@ -1,0 +1,206 @@
+@model CommerceManager.Web.Models.ReturnDetails
+
+@{
+    ViewData["Title"] = "İade Detayı";
+}
+
+<div class="return-detail-heading">
+    <div>
+        <a asp-action="Index"
+           class="back-link">
+            ← İadelere Dön
+        </a>
+
+        <h1>İade Detayı</h1>
+
+        <p>
+            Sipariş #@Model.OrderNumber
+        </p>
+    </div>
+
+    <span class="status @Model.StatusCss">
+        @Model.StatusText
+    </span>
+</div>
+
+@if (ViewBag.ApiError is not null)
+{
+    <div class="alert-error">
+        @ViewBag.ApiError
+    </div>
+}
+
+<div class="return-detail-grid">
+
+    <div class="return-detail-main">
+
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <div>
+                    <h2>İade Edilen Ürün</h2>
+                    <p>Ürün ve fiyat bilgileri</p>
+                </div>
+
+                <span class="channel-badge">
+                    @Model.ChannelText
+                </span>
+            </div>
+
+            <div class="return-product">
+
+                @if (!string.IsNullOrWhiteSpace(Model.ImageUrl))
+                {
+                    <img src="@Model.ImageUrl"
+                         alt="@Model.ProductName"
+                         class="return-product-image" />
+                }
+                else
+                {
+                    <div class="return-product-image return-product-placeholder">
+                        📦
+                    </div>
+                }
+
+                <div class="return-product-content">
+                    <h3>@Model.ProductName</h3>
+
+                    <span class="barcode">
+                        @Model.Barcode
+                    </span>
+
+                    <div class="return-product-prices">
+                        <div>
+                            <small>Adet</small>
+                            <strong>@Model.Quantity</strong>
+                        </div>
+
+                        <div>
+                            <small>Birim Fiyat</small>
+                            <strong>@Model.UnitPrice.ToString("N2") ₺</strong>
+                        </div>
+
+                        <div>
+                            <small>Toplam</small>
+                            <strong>@Model.TotalPrice.ToString("N2") ₺</strong>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <div>
+                    <h2>İade Bilgileri</h2>
+                    <p>Trendyol iade kaydı</p>
+                </div>
+            </div>
+
+            <div class="detail-fields">
+
+                <div class="detail-field">
+                    <span>İade ID</span>
+                    <strong>@Model.ExternalReturnId</strong>
+                </div>
+
+                <div class="detail-field">
+                    <span>Sipariş No</span>
+                    <strong>#@Model.OrderNumber</strong>
+                </div>
+
+                <div class="detail-field">
+                    <span>Durum</span>
+                    <strong>
+                        <span class="status @Model.StatusCss">
+                            @Model.StatusText
+                        </span>
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span>Stok İşlemi</span>
+
+                    @if (Model.StockApplied)
+                    {
+                        <strong class="stock-ok">
+                            ✓ Stoğa işlendi
+                        </strong>
+                    }
+                    else
+                    {
+                        <strong class="stock-wait">
+                            Henüz uygulanmadı
+                        </strong>
+                    }
+                </div>
+
+                <div class="detail-field">
+                    <span>Kabul Tarihi</span>
+                    <strong>
+                        @(Model.AcceptedAt.HasValue
+                            ? Model.AcceptedAt.Value
+                                .ToLocalTime()
+                                .ToString("dd.MM.yyyy HH:mm")
+                            : "—")
+                    </strong>
+                </div>
+
+                <div class="detail-field">
+                    <span>Son Güncelleme</span>
+                    <strong>
+                        @(Model.ExternalLastModifiedAt
+                            .ToLocalTime()
+                            .ToString("dd.MM.yyyy HH:mm"))
+                    </strong>
+                </div>
+
+            </div>
+        </div>
+
+    </div>
+
+    <div class="return-detail-side">
+
+        <div class="detail-card">
+            <div class="detail-card-header">
+                <div>
+                    <h2>Özet</h2>
+                    <p>İade işlemi</p>
+                </div>
+            </div>
+
+            <div class="detail-summary-row">
+                <span>Kanal</span>
+                <strong>@Model.ChannelText</strong>
+            </div>
+
+            <div class="detail-summary-row">
+                <span>İade Adedi</span>
+                <strong>@Model.Quantity</strong>
+            </div>
+
+            <div class="detail-summary-row">
+                <span>İade Tutarı</span>
+                <strong>@Model.TotalPrice.ToString("N2") ₺</strong>
+            </div>
+
+            <div class="detail-summary-row total">
+                <span>Stok Durumu</span>
+
+                @if (Model.StockApplied)
+                {
+                    <strong class="stock-ok">
+                        ✓ Güncellendi
+                    </strong>
+                }
+                else
+                {
+                    <strong>Bekliyor</strong>
+                }
+            </div>
+        </div>
+
+    </div>
+
+</div>

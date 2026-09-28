@@ -1,0 +1,80 @@
+using CommerceManager.Application.Integrations.Trendyol;
+using CommerceManager.Domain.Inventory;
+using CommerceManager.Domain.Orders;
+using CommerceManager.Infrastructure.Persistence;
+using Microsoft.EntityFrameworkCore;
+
+namespace CommerceManager.Infrastructure.Integrations.Trendyol;
+
+public sealed class TrendyolInventoryStore(
+    AppDbContext db,
+    ITrendyolInventoryReader reader)
+    : ITrendyolInventoryStore
+{
+    public async Task<TrendyolInventorySyncResult> SyncAsync(
+        CancellationToken cancellationToken)
+    {
+        const int size = 100;
+
+        var received = 0;
+        var inserted = 0;
+        var updated = 0;
+        var unchanged = 0;
+
+        var page = 0;
+
+        while (true)
+        {
+            var result = await reader.ReadPageAsync(
+                page,
+                size,
+                cancellationToken);
+
+            foreach (var item in result.Items)
+            {
+                received++;
+
+                var stock = await db.ChannelStocks
+                    .SingleOrDefaultAsync(
+                        x =>
+                            x.Channel == SalesChannel.Trendyol &&
+                            x.Barcode == item.Barcode,
+                        cancellationToken);
+
+                if (stock is null)
+                {
+                    db.ChannelStocks.Add(
+                        ChannelStock.Create(
+                            SalesChannel.Trendyol,
+                            item.Barcode,
+                            item.Quantity));
+
+                    inserted++;
+                    continue;
+                }
+
+                if (stock.Quantity == item.Quantity)
+                {
+                    unchanged++;
+                    continue;
+                }
+
+                stock.SetQuantity(item.Quantity);
+                updated++;
+            }
+
+            await db.SaveChangesAsync(cancellationToken);
+
+            if (page + 1 >= result.TotalPages)
+                break;
+
+            page++;
+        }
+
+        return new TrendyolInventorySyncResult(
+            received,
+            inserted,
+            updated,
+            unchanged);
+    }
+}

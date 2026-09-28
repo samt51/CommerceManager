@@ -1,0 +1,436 @@
+@model CommerceManager.Web.Models.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+
+    var summary = Model.Summary;
+
+    string StatusText(string? status) => status switch
+    {
+        "Delivered" => "Teslim Edildi",
+        "Picking" => "Hazırlanıyor",
+        "Shipped" => "Kargoda",
+        "Cancelled" => "İptal",
+        "UnDelivered" => "Teslim Edilemedi",
+        "UnDeliveredAndReturned" => "Geri Döndü",
+        _ => status ?? "Bilinmiyor"
+    };
+
+    string StatusCss(string? status) => status switch
+    {
+        "Delivered" => "success",
+        "Picking" => "pending",
+        "Shipped" => "info",
+        "Cancelled" => "cancelled",
+        _ => "neutral"
+    };
+
+    var maxDailyAmount =
+        Model.DailySales.Count == 0
+            ? 1
+            : Math.Max(
+                1,
+                Model.DailySales.Max(x => x.TotalAmount));
+}
+
+<div class="dashboard-page">
+
+    <div class="dashboard-header">
+
+        <div>
+            <div class="dashboard-title-row">
+                <h1>Dashboard</h1>
+                <span class="marketplace-badge">
+                    <span class="marketplace-dot"></span>
+                    Trendyol
+                </span>
+            </div>
+
+            <p class="dashboard-subtitle">
+                Trendyol mağazanızın genel durumunu ve satış performansını
+                buradan takip edebilirsiniz.
+            </p>
+        </div>
+
+        <div class="dashboard-header-actions">
+
+            <form method="get"
+                  action="/"
+                  class="dashboard-period-form">
+
+                <label for="period">
+                    Tarih Aralığı
+                </label>
+
+                <select id="period"
+                        name="period"
+                        class="dashboard-period-select"
+                        onchange="this.form.submit()">
+
+                    <option value="this-month"
+                            selected="@(Model.SelectedPeriod == "this-month")">
+                        Bu Ay
+                    </option>
+
+                    <option value="last-30-days"
+                            selected="@(Model.SelectedPeriod == "last-30-days")">
+                        Son 30 Gün
+                    </option>
+
+                    <option value="last-3-months"
+                            selected="@(Model.SelectedPeriod == "last-3-months")">
+                        Son 3 Ay
+                    </option>
+
+                    <option value="last-6-months"
+                            selected="@(Model.SelectedPeriod == "last-6-months")">
+                        Son 6 Ay
+                    </option>
+
+                    <option value="this-year"
+                            selected="@(Model.SelectedPeriod == "this-year")">
+                        Bu Yıl
+                    </option>
+
+                    <option value="all-time"
+                            selected="@(Model.SelectedPeriod == "all-time")">
+                        Tüm Zamanlar
+                    </option>
+
+                </select>
+            </form>
+
+            <a href="/Marketplaces" class="dashboard-action">
+                Pazaryeri Yönetimi
+            </a>
+
+            <button type="button"
+                    class="dashboard-refresh"
+                    onclick="window.location.reload()">
+                ↻ Yenile
+            </button>
+        </div>
+
+    </div>
+
+    @if (!string.IsNullOrWhiteSpace(Model.ApiError))
+    {
+        <div class="dashboard-alert">
+            <strong>Dashboard verileri alınamadı.</strong>
+            <span>@Model.ApiError</span>
+        </div>
+    }
+
+    <section class="dashboard-kpi-grid">
+
+        <div class="dashboard-kpi-card primary">
+            <div class="dashboard-kpi-top">
+                <span class="dashboard-kpi-label">Net Satış</span>
+                <span class="dashboard-kpi-icon">₺</span>
+            </div>
+
+            <strong class="dashboard-kpi-value">
+                @summary.NetSales.ToString("N2") ₺
+            </strong>
+
+            <div class="dashboard-kpi-footer">
+                <span>Brüt satış</span>
+                <strong>
+                    @summary.GrossSales.ToString("N2") ₺
+                </strong>
+            </div>
+        </div>
+
+        <div class="dashboard-kpi-card">
+            <div class="dashboard-kpi-top">
+                <span class="dashboard-kpi-label">Siparişler</span>
+                <span class="dashboard-kpi-icon">▣</span>
+            </div>
+
+            <strong class="dashboard-kpi-value">
+                @summary.TotalOrders.ToString("N0")
+            </strong>
+
+            <div class="dashboard-kpi-footer">
+                <span>Hazırlanıyor</span>
+                <strong>
+                    @summary.PreparingOrderCount
+                </strong>
+            </div>
+        </div>
+
+        <div class="dashboard-kpi-card">
+            <div class="dashboard-kpi-top">
+                <span class="dashboard-kpi-label">Ürünler</span>
+                <span class="dashboard-kpi-icon">▦</span>
+            </div>
+
+            <strong class="dashboard-kpi-value">
+                @summary.TotalProducts.ToString("N0")
+            </strong>
+
+            <div class="dashboard-kpi-footer">
+                <span>Katalogdaki ürün</span>
+                <strong>Trendyol</strong>
+            </div>
+        </div>
+
+        <div class="dashboard-kpi-card">
+            <div class="dashboard-kpi-top">
+                <span class="dashboard-kpi-label">Toplam Stok</span>
+                <span class="dashboard-kpi-icon">▤</span>
+            </div>
+
+            <strong class="dashboard-kpi-value">
+                @summary.TotalStockQuantity.ToString("N0")
+            </strong>
+
+            <div class="dashboard-kpi-footer">
+                <span>Kanal stoğu</span>
+                <a href="/Stocks">Stokları Gör</a>
+            </div>
+        </div>
+
+    </section>
+
+    <section class="dashboard-main-grid">
+
+        <div class="dashboard-card sales-card">
+
+            <div class="dashboard-card-header">
+
+                <div>
+                    <h2>Satış Performansı</h2>
+                    <p>Son 7 günlük satış hareketi</p>
+                </div>
+
+                <div class="dashboard-card-total">
+                    @{
+                        var sevenDayTotal =
+                            Model.DailySales.Sum(x => x.TotalAmount);
+                    }
+
+                    <strong>
+                        @sevenDayTotal.ToString("N2") ₺
+                    </strong>
+
+                    <span>7 günlük satış</span>
+                </div>
+
+            </div>
+
+            <div class="sales-chart">
+
+                @foreach (var item in Model.DailySales)
+                {
+                    var height =
+                        Math.Max(
+                            8,
+                            (double)(item.TotalAmount / maxDailyAmount * 100));
+
+                    <div class="sales-chart-column">
+
+                        <div class="sales-chart-value">
+                            @item.TotalAmount.ToString("N0") ₺
+                        </div>
+
+                        <div class="sales-chart-bar-wrapper">
+
+                            <div class="sales-chart-bar"
+                                 style="height:@height.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)%">
+                            </div>
+
+                        </div>
+
+                        <div class="sales-chart-date">
+                            @item.Date.ToString("dd.MM")
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+        <div class="dashboard-card status-card">
+
+            <div class="dashboard-card-header">
+                <div>
+                    <h2>Sipariş Durumları</h2>
+                    <p>Mevcut sipariş dağılımı</p>
+                </div>
+            </div>
+
+            <div class="status-list">
+
+                @foreach (var item in Model.OrderStatuses)
+                {
+                    var percentage =
+                        summary.TotalOrders > 0
+                            ? Math.Round(
+                                (decimal)item.Count /
+                                summary.TotalOrders * 100,
+                                1)
+                            : 0;
+
+                    <div class="status-row">
+
+                        <div class="status-row-top">
+
+                            <span class="status-name">
+                                <span class="status-indicator @StatusCss(item.Status)"></span>
+                                @StatusText(item.Status)
+                            </span>
+
+                            <strong>@item.Count</strong>
+
+                        </div>
+
+                        <div class="status-progress">
+                            <div class="status-progress-value @StatusCss(item.Status)"
+                                 style="width:@percentage.ToString(System.Globalization.CultureInfo.InvariantCulture)%">
+                            </div>
+                        </div>
+
+                    </div>
+                }
+
+            </div>
+
+        </div>
+
+    </section>
+
+    <section class="dashboard-bottom-grid">
+
+        <div class="dashboard-card orders-card">
+
+            <div class="dashboard-card-header">
+
+                <div>
+                    <h2>Son Siparişler</h2>
+                    <p>Trendyol'dan alınan son siparişler</p>
+                </div>
+
+                <a href="/Orders" class="dashboard-card-link">
+                    Tümünü Gör →
+                </a>
+
+            </div>
+
+            <div class="dashboard-table-wrapper">
+
+                <table class="dashboard-table">
+
+                    <thead>
+                        <tr>
+                            <th>Sipariş No</th>
+                            <th>Tarih</th>
+                            <th>Ürün</th>
+                            <th>Durum</th>
+                            <th class="text-right">Tutar</th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+
+                    @foreach (var order in Model.RecentOrders)
+                    {
+                        <tr>
+
+                            <td>
+                                <a href="/Orders/Details/@order.Id"
+                                   class="dashboard-order-number">
+                                    #@order.OrderNumber
+                                </a>
+                            </td>
+
+                            <td>
+                                <span class="dashboard-date">
+                                    @(order.OrderedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm"))
+                                </span>
+                            </td>
+
+                            <td>
+                                @order.ItemCount ürün
+                            </td>
+
+                            <td>
+                                <span class="dashboard-status @StatusCss(order.Status)">
+                                    @StatusText(order.Status)
+                                </span>
+                            </td>
+
+                            <td class="text-right">
+                                <strong>
+                                    @order.TotalAmount.ToString("N2") ₺
+                                </strong>
+                            </td>
+
+                        </tr>
+                    }
+
+                    </tbody>
+
+                </table>
+
+            </div>
+
+        </div>
+
+        <div class="dashboard-card returns-card">
+
+            <div class="dashboard-card-header">
+
+                <div>
+                    <h2>İadeler</h2>
+                    <p>Kabul edilen iadeler</p>
+                </div>
+
+                <span class="return-icon">↩</span>
+
+            </div>
+
+            <div class="return-main">
+
+                <strong>
+                    @summary.AcceptedReturnCount
+                </strong>
+
+                <span>
+                    kabul edilen iade
+                </span>
+
+            </div>
+
+            <div class="return-amount">
+
+                <span>İade tutarı</span>
+
+                <strong>
+                    @summary.AcceptedReturnAmount.ToString("N2") ₺
+                </strong>
+
+            </div>
+
+            <div class="return-net">
+
+                <div>
+                    <span>Net satış</span>
+                    <strong>
+                        @summary.NetSales.ToString("N2") ₺
+                    </strong>
+                </div>
+
+                <a href="/Returns">
+                    İadeleri Gör →
+                </a>
+
+            </div>
+
+        </div>
+
+    </section>
+
+</div>

@@ -1,0 +1,81 @@
+using CommerceManager.Application;
+using CommerceManager.Infrastructure;
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.AddControllers();
+builder.Services.AddOpenApi();
+builder.Services.AddApplication();
+builder.Services.AddInfrastructure(builder.Configuration);
+builder.Services.AddHttpClient<CommerceManager.Application.Integrations.Trendyol.ITrendyolOrderReader, CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolOrderReader>();
+builder.Services.AddHttpClient<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolPackageReader,
+    CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolPackageReader>();
+builder.Services.AddScoped<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolPackageStore,
+    CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolPackageStore>();
+builder.Services.AddHttpClient<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolStreamReader,
+    CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolStreamReader>();
+
+builder.Services.AddHttpClient<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolReturnReader,
+    CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolReturnReader>();
+
+builder.Services.AddHttpClient<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolInventoryReader,
+    CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolInventoryReader>();
+
+builder.Services.AddScoped<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolInventoryStore,
+    CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolInventoryStore>();
+
+builder.Services.AddScoped<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolProductStore,
+    CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolProductStore>();
+
+builder.Services.AddHttpClient<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolProductReader,
+    CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolProductReader>();
+
+builder.Services.AddScoped<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolProductImageStore,
+    CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolProductImageStore>();
+
+builder.Services.AddScoped<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolReturnStore,
+    CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolReturnStore>();
+builder.Services.AddScoped<
+    CommerceManager.Application.Orders.IOrderReader,
+    CommerceManager.Infrastructure.Persistence.OrderReader>();
+
+builder.Services.AddScoped<
+    CommerceManager.Application.Inventory.IStockReader,
+    CommerceManager.Infrastructure.Persistence.StockReader>();
+
+builder.Services.AddScoped<
+    CommerceManager.Application.Products.IProductReader,
+    CommerceManager.Infrastructure.Persistence.ProductReader>();
+
+builder.Services.AddScoped<
+    CommerceManager.Application.Returns.IReturnReader,
+    CommerceManager.Infrastructure.Persistence.ReturnReader>();
+
+builder.Services.AddScoped<
+    CommerceManager.Application.Dashboard.IDashboardReader,
+    CommerceManager.Infrastructure.Persistence.DashboardReader>();
+
+builder.Services.AddScoped<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolIntegrationStatusReader,
+    CommerceManager.Infrastructure.Persistence.TrendyolIntegrationStatusReader>();
+
+builder.Services.AddScoped<
+    CommerceManager.Infrastructure.Integrations.MarketplaceIntegrationStatusStore>();
+builder.Services.AddHostedService<
+    CommerceManager.Api.Integrations.Trendyol.TrendyolOrderSyncWorker>();
+
+builder.Services.AddHostedService<
+    CommerceManager.Api.Integrations.Trendyol.TrendyolReturnSyncWorker>();
+
+var app = builder.Build();
+if (app.Environment.IsDevelopment()) app.MapOpenApi();
+app.MapControllers();
+app.Run();

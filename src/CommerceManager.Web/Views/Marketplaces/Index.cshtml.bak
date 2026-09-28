@@ -1,0 +1,404 @@
+@model CommerceManager.Web.Models.MarketplaceIndexViewModel
+
+@{
+    ViewData["Title"] = "Pazaryerleri";
+}
+
+<div class="page-heading">
+    <div>
+        <h1>Pazaryerleri</h1>
+        <p>Satış kanallarınızı ve senkronizasyon işlemlerini yönetin.</p>
+    </div>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Message))
+{
+    <div class="sync-modal-overlay"
+         id="syncResultModal">
+
+        <div class="sync-modal"
+             role="dialog"
+             aria-modal="true"
+             aria-labelledby="syncModalTitle">
+
+            <button type="button"
+                    class="sync-modal-close"
+                    onclick="closeSyncModal()"
+                    aria-label="Kapat">
+                ×
+            </button>
+
+            <div class="sync-modal-icon @(Model.IsError ? "error" : "success")">
+                @(Model.IsError ? "!" : "✓")
+            </div>
+
+            <h2 id="syncModalTitle">
+                @(Model.IsError
+                    ? "Senkronizasyon Başarısız"
+                    : "Senkronizasyon Tamamlandı")
+            </h2>
+
+            <p class="sync-modal-subtitle">
+                @(Model.IsError
+                    ? "İşlem sırasında bir sorun oluştu."
+                    : "Trendyol verileri başarıyla işlendi.")
+            </p>
+
+            <div class="sync-modal-result @(Model.IsError ? "error" : "success")">
+                @Model.Message
+            </div>
+
+            <button type="button"
+                    class="sync-modal-ok"
+                    onclick="closeSyncModal()">
+                Tamam
+            </button>
+
+        </div>
+    </div>
+}
+
+<div class="marketplace-card">
+
+    <div class="marketplace-header">
+        <div class="marketplace-brand">
+            <div class="marketplace-logo">T</div>
+
+            <div>
+                <div class="marketplace-name-row">
+                    <h2>Trendyol</h2>
+
+                    <span class="status @(Model.IsActive ? "accepted" : "cancelled")">
+                        @(Model.IsActive ? "Bağlı" : "Bağlantı Yok")
+                    </span>
+                </div>
+
+                <p>
+                    Ürün, stok, sipariş ve iade entegrasyonu
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <div class="marketplace-stats">
+
+        <div class="marketplace-stat">
+            <span>Ürün</span>
+            <strong>@Model.ProductCount</strong>
+            <small>Trendyol kataloğu</small>
+        </div>
+
+        <div class="marketplace-stat">
+            <span>Stok Kaydı</span>
+            <strong>@Model.StockCount</strong>
+            <small>Kanal stokları</small>
+        </div>
+
+        <div class="marketplace-stat">
+            <span>Toplam Stok</span>
+            <strong>@Model.TotalStockQuantity</strong>
+            <small>Toplam adet</small>
+        </div>
+
+        <div class="marketplace-stat">
+            <span>Kanal</span>
+            <strong>Aktif</strong>
+            <small>Trendyol</small>
+        </div>
+
+    </div>
+
+    <div class="marketplace-section-title">
+        <div>
+            <h3>Senkronizasyon</h3>
+            <p>
+                Trendyol verilerini CommerceManager ile eşitleyin.
+            </p>
+        </div>
+    </div>
+
+    <div class="marketplace-sync-grid">
+
+        <div class="sync-card">
+            <div>
+                <h4>Siparişler</h4>
+                <p>
+                    Son 1 günlük Trendyol siparişlerini alır ve
+                    mevcut siparişleri günceller.
+                </p>
+            </div>
+
+            <form method="post"
+                  action="@Url.Action("SyncOrders", "Marketplaces")">
+                @Html.AntiForgeryToken()
+
+                <button type="submit"
+                        class="sync-button">
+                    Siparişleri Senkronize Et
+                </button>
+            </form>
+        </div>
+
+        <div class="sync-card">
+            <div>
+                <h4>Ürünler</h4>
+                <p>
+                    Trendyol ürün kataloğunu, ürün bilgilerini ve
+                    görselleri günceller.
+                </p>
+            </div>
+
+            <form method="post"
+                  action="@Url.Action("SyncProducts", "Marketplaces")">
+                @Html.AntiForgeryToken()
+
+                <button type="submit"
+                        class="sync-button">
+                    Ürünleri Senkronize Et
+                </button>
+            </form>
+        </div>
+
+        <div class="sync-card">
+            <div>
+                <h4>İadeler</h4>
+                <p>
+                    Son 30 günlük iadeleri kontrol eder. Kabul edilmiş
+                    yeni iadelerde stok hareketini uygular.
+                </p>
+            </div>
+
+            <form method="post"
+                  action="@Url.Action("SyncReturns", "Marketplaces")">
+                @Html.AntiForgeryToken()
+
+                <button type="submit"
+                        class="sync-button">
+                    İadeleri Senkronize Et
+                </button>
+            </form>
+        </div>
+
+        <div class="sync-card sync-card-warning">
+            <div>
+                <div class="sync-warning-title">
+                    <h4>Stok Snapshot</h4>
+                    <span>Manuel</span>
+                </div>
+
+                <p>
+                    Trendyol'daki mevcut stok miktarlarını yeniden
+                    okuyarak kanal stoklarını günceller.
+                </p>
+
+                <div class="sync-warning">
+                    Bu işlem CommerceManager içindeki mevcut Trendyol
+                    kanal stok miktarlarının üzerine güncel marketplace
+                    snapshot değerlerini yazar.
+                </div>
+            </div>
+
+            <form method="post"
+                  id="inventorySyncForm"
+                  action="@Url.Action("SyncInventory", "Marketplaces")">
+                @Html.AntiForgeryToken()
+
+                <button type="submit"
+                        class="sync-button sync-button-warning">
+                    Stokları Yenile
+                </button>
+            </form>
+        </div>
+
+    </div>
+
+</div>
+
+
+<script>
+    function closeSyncModal() {
+        const modal =
+            document.getElementById('syncResultModal');
+
+        if (modal) {
+            modal.classList.add('closing');
+
+            window.setTimeout(() => {
+                modal.remove();
+            }, 160);
+        }
+    }
+
+    document.addEventListener('keydown', function (event) {
+        if (event.key === 'Escape') {
+            closeSyncModal();
+        }
+    });
+
+    document.addEventListener('click', function (event) {
+        const modal =
+            document.getElementById('syncResultModal');
+
+        if (modal && event.target === modal) {
+            closeSyncModal();
+        }
+    });
+
+    document.querySelectorAll(
+        '.marketplace-sync-grid form'
+    ).forEach(function (form) {
+
+        form.addEventListener('submit', function () {
+            const button =
+                form.querySelector('button[type="submit"]');
+
+            if (!button)
+                return;
+
+            window.setTimeout(function () {
+                button.disabled = true;
+                button.dataset.originalText =
+                    button.textContent.trim();
+
+                button.innerHTML =
+                    '<span class="sync-spinner"></span>' +
+                    'Senkronize ediliyor...';
+            }, 0);
+        });
+    });
+</script>
+
+<div class="confirm-modal-overlay"
+     id="inventoryConfirmModal"
+     aria-hidden="true">
+
+    <div class="confirm-modal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="inventoryConfirmTitle">
+
+        <button type="button"
+                class="confirm-modal-close"
+                id="inventoryConfirmClose"
+                aria-label="Kapat">
+            ×
+        </button>
+
+        <div class="confirm-modal-icon">
+            !
+        </div>
+
+        <h2 id="inventoryConfirmTitle">
+            Stokları Yenile?
+        </h2>
+
+        <p class="confirm-modal-description">
+            Trendyol'daki güncel stok miktarları yeniden okunacak.
+        </p>
+
+        <div class="confirm-modal-warning">
+            <strong>Dikkat</strong>
+
+            <span>
+                Mevcut Trendyol kanal stokları marketplace
+                snapshot değerleriyle güncellenecek.
+            </span>
+        </div>
+
+        <div class="confirm-modal-actions">
+            <button type="button"
+                    class="confirm-modal-cancel"
+                    id="inventoryConfirmCancel">
+                Vazgeç
+            </button>
+
+            <button type="button"
+                    class="confirm-modal-approve"
+                    id="inventoryConfirmApprove">
+                Stokları Yenile
+            </button>
+        </div>
+
+    </div>
+</div>
+
+
+<script>
+    document.addEventListener('DOMContentLoaded', function () {
+
+        const form =
+            document.getElementById('inventorySyncForm');
+
+        const modal =
+            document.getElementById('inventoryConfirmModal');
+
+        const approve =
+            document.getElementById('inventoryConfirmApprove');
+
+        const cancel =
+            document.getElementById('inventoryConfirmCancel');
+
+        const close =
+            document.getElementById('inventoryConfirmClose');
+
+        if (!form || !modal)
+            return;
+
+        let approved = false;
+
+        function openInventoryModal() {
+            modal.classList.add('open');
+            modal.setAttribute('aria-hidden', 'false');
+        }
+
+        function closeInventoryModal() {
+            modal.classList.remove('open');
+            modal.setAttribute('aria-hidden', 'true');
+        }
+
+        form.addEventListener('submit', function (event) {
+            if (approved)
+                return;
+
+            event.preventDefault();
+            openInventoryModal();
+        });
+
+        approve?.addEventListener('click', function () {
+            approved = true;
+            closeInventoryModal();
+
+            const submitButton =
+                form.querySelector('button[type="submit"]');
+
+            if (submitButton) {
+                submitButton.disabled = true;
+                submitButton.innerHTML =
+                    '<span class="sync-spinner"></span>' +
+                    'Senkronize ediliyor...';
+            }
+
+            form.requestSubmit();
+        });
+
+        cancel?.addEventListener(
+            'click',
+            closeInventoryModal);
+
+        close?.addEventListener(
+            'click',
+            closeInventoryModal);
+
+        modal.addEventListener('click', function (event) {
+            if (event.target === modal)
+                closeInventoryModal();
+        });
+
+        document.addEventListener(
+            'keydown',
+            function (event) {
+                if (event.key === 'Escape')
+                    closeInventoryModal();
+            });
+    });
+</script>
