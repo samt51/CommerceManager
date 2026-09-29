@@ -170,9 +170,9 @@
                 <div>
                     <span>Ürün Son Güncelleme</span>
                     <strong>
-                        @Model.ProductUpdatedAt
+                        @(Model.ProductUpdatedAt
                             .ToLocalTime()
-                            .ToString("dd.MM.yyyy HH:mm")
+                            .ToString("dd.MM.yyyy HH:mm"))
                     </strong>
                 </div>
 
@@ -182,9 +182,9 @@
                     @if (Model.StockUpdatedAt.HasValue)
                     {
                         <strong>
-                            @Model.StockUpdatedAt.Value
+                            @(Model.StockUpdatedAt.Value
                                 .ToLocalTime()
-                                .ToString("dd.MM.yyyy HH:mm")
+                                .ToString("dd.MM.yyyy HH:mm"))
                         </strong>
                     }
                     else

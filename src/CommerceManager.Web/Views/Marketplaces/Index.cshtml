@@ -4,10 +4,36 @@
     ViewData["Title"] = "Pazaryerleri";
 }
 
-<div class="page-heading">
-    <div>
+<div class="marketplaces-hero">
+    <div class="marketplaces-hero-icon" aria-hidden="true">
+        ◇
+    </div>
+
+    <div class="marketplaces-hero-content">
+        <span class="marketplaces-hero-eyebrow">
+            SATIŞ KANALLARI
+        </span>
+
         <h1>Pazaryerleri</h1>
-        <p>Satış kanallarınızı ve senkronizasyon işlemlerini yönetin.</p>
+
+        <p>
+            Satış kanallarınızı ve senkronizasyon işlemlerini yönetin.
+        </p>
+
+        <div class="marketplaces-hero-badges">
+            <span class="marketplaces-channel-badge">
+                Trendyol
+            </span>
+
+            <span class="marketplaces-connection @(Model.IsActive ? "connected" : "disconnected")">
+                <i></i>
+                @(Model.IsActive ? "Bağlantı Aktif" : "Bağlantı Yok")
+            </span>
+        </div>
+    </div>
+
+    <div class="marketplaces-hero-decoration" aria-hidden="true">
+        ◇
     </div>
 </div>
 
@@ -58,7 +84,7 @@
     </div>
 }
 
-<div class="marketplace-card">
+<div class="marketplace-card marketplace-premium-card">
 
     <div class="marketplace-header">
         <div class="marketplace-brand">
@@ -125,7 +151,7 @@
 
         <div class="sync-card">
             <div>
-                <h4>Siparişler</h4>
+                <div class="marketplace-sync-title"><span class="marketplace-sync-icon">▤</span><h4>Siparişler</h4></div>
                 <p>
                     Son 1 günlük Trendyol siparişlerini alır ve
                     mevcut siparişleri günceller.
@@ -145,7 +171,7 @@
 
         <div class="sync-card">
             <div>
-                <h4>Ürünler</h4>
+                <div class="marketplace-sync-title"><span class="marketplace-sync-icon">▦</span><h4>Ürünler</h4></div>
                 <p>
                     Trendyol ürün kataloğunu, ürün bilgilerini ve
                     görselleri günceller.
@@ -165,7 +191,7 @@
 
         <div class="sync-card">
             <div>
-                <h4>İadeler</h4>
+                <div class="marketplace-sync-title"><span class="marketplace-sync-icon">↩</span><h4>İadeler</h4></div>
                 <p>
                     Son 30 günlük iadeleri kontrol eder. Kabul edilmiş
                     yeni iadelerde stok hareketini uygular.
@@ -186,7 +212,10 @@
         <div class="sync-card sync-card-warning">
             <div>
                 <div class="sync-warning-title">
-                    <h4>Stok Snapshot</h4>
+                    <div class="marketplace-sync-title">
+                        <span class="marketplace-sync-icon warning">∑</span>
+                        <h4>Stok Snapshot</h4>
+                    </div>
                     <span>Manuel</span>
                 </div>
 

@@ -1,0 +1,115 @@
+@model CommerceManager.Web.Models.Profile.ProfileViewModel
+
+@{
+    ViewData["Title"] = "Profilim";
+}
+
+<div class="profile-page">
+
+    <div class="page-heading profile-heading">
+        <div>
+            <h1>Profilim</h1>
+            <p>Hesap bilgilerinizi görüntüleyin ve güncelleyin.</p>
+        </div>
+
+        <a asp-controller="Profile"
+           asp-action="ChangePassword"
+           class="profile-secondary-button">
+            Şifre Değiştir
+        </a>
+    </div>
+
+    @if (TempData["SuccessMessage"] is string success)
+    {
+        <div class="profile-alert profile-alert-success">
+            <span>✓</span>
+            @success
+        </div>
+    }
+
+    <div class="profile-grid">
+
+        <aside class="profile-summary-card">
+            <div class="profile-large-avatar">
+                @(string.IsNullOrWhiteSpace(Model.FullName)
+                    ? "K"
+                    : Model.FullName[..1].ToUpperInvariant())
+            </div>
+
+            <h2>@Model.FullName</h2>
+            <p>@@@Model.UserName</p>
+
+            <span class="profile-role">@Model.Role</span>
+
+            <div class="profile-summary-info">
+                <div>
+                    <span>Hesap Oluşturma</span>
+                    <strong>@Model.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy")</strong>
+                </div>
+
+                <div>
+                    <span>Son Giriş</span>
+                    <strong>
+                        @(Model.LastLoginAt.HasValue
+                            ? Model.LastLoginAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                            : "-")
+                    </strong>
+                </div>
+            </div>
+        </aside>
+
+        <section class="profile-form-card">
+            <div class="profile-card-header">
+                <h2>Kişisel Bilgiler</h2>
+                <p>Ad soyad ve e-posta bilgilerinizi güncelleyebilirsiniz.</p>
+            </div>
+
+            <form asp-controller="Profile"
+                  asp-action="Index"
+                  method="post">
+
+                @Html.AntiForgeryToken()
+
+                <div asp-validation-summary="ModelOnly"
+                     class="profile-validation"></div>
+
+                <input asp-for="Id" type="hidden" />
+                <input asp-for="Role" type="hidden" />
+                <input asp-for="CreatedAt" type="hidden" />
+                <input asp-for="LastLoginAt" type="hidden" />
+
+                <div class="profile-field">
+                    <label asp-for="UserName"></label>
+                    <input asp-for="UserName"
+                           class="profile-input profile-input-readonly"
+                           readonly />
+                    <small>Kullanıcı adı yalnızca yönetici tarafından değiştirilebilir.</small>
+                </div>
+
+                <div class="profile-field">
+                    <label asp-for="FullName"></label>
+                    <input asp-for="FullName"
+                           class="profile-input"
+                           autocomplete="name" />
+                    <span asp-validation-for="FullName"></span>
+                </div>
+
+                <div class="profile-field">
+                    <label asp-for="Email"></label>
+                    <input asp-for="Email"
+                           class="profile-input"
+                           autocomplete="email" />
+                    <span asp-validation-for="Email"></span>
+                </div>
+
+                <div class="profile-actions">
+                    <button type="submit"
+                            class="profile-primary-button">
+                        Değişiklikleri Kaydet
+                    </button>
+                </div>
+            </form>
+        </section>
+
+    </div>
+</div>

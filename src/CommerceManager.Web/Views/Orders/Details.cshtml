@@ -6,26 +6,47 @@
     var totalQuantity = Model.Items.Sum(x => x.Quantity);
 }
 
-<div class="page-heading">
-    <div>
-        <a href="/Orders" class="back-link">
-            ← Siparişlere Dön
-        </a>
+<div class="order-detail-top">
+    <a href="/Orders" class="order-detail-back">
+        <span>←</span>
+        Siparişlere Dön
+    </a>
 
-        <h1>Sipariş Detayı</h1>
+    <div class="order-detail-hero">
+        <div class="order-detail-hero-icon">
+            <span>▢</span>
+        </div>
 
-        @if (!string.IsNullOrWhiteSpace(Model.OrderNumber))
-        {
-            <p>#@Model.OrderNumber</p>
-        }
+        <div class="order-detail-hero-content">
+            <span class="order-detail-eyebrow">SİPARİŞ DETAYI</span>
+
+            <h1>
+                #@(Model.OrderNumber ?? "-")
+            </h1>
+
+            <div class="order-detail-meta">
+                <span class="status @Model.StatusCss order-detail-status">
+                    ◷ @Model.StatusText
+                </span>
+
+                <span class="order-detail-meta-item">
+                    <span class="order-detail-meta-icon">▣</span>
+                    @(Model.OrderedAt
+                        .ToLocalTime()
+                        .ToString("dd.MM.yyyy HH:mm"))
+                </span>
+
+                <span class="order-detail-meta-item">
+                    <span class="order-detail-meta-icon">◇</span>
+                    @Model.Items.Count kalem · @totalQuantity adet ürün
+                </span>
+
+                <span class="channel-badge order-detail-channel">
+                    Trendyol
+                </span>
+            </div>
+        </div>
     </div>
-
-    @if (!string.IsNullOrWhiteSpace(Model.Status))
-    {
-        <span class="status @Model.StatusCss">
-            @Model.StatusText
-        </span>
-    }
 </div>
 
 @if (ViewBag.ApiError is not null)

@@ -152,7 +152,7 @@
                 foreach (var item in Model.Items)
                 {
                     <tr>
-                        <td>
+                        <td data-label="Sipariş No">
                             <a href="@Url.Action("Details", "Orders", new { id = item.Id })"
                                class="order-number return-detail-link">
                                 #@item.OrderNumber
@@ -163,37 +163,61 @@
                             </div>
                         </td>
 
-                        <td class="order-date">
+                        <td data-label="Tarih" class="order-date">
                             @(item.OrderedAt
                                 .ToLocalTime()
                                 .ToString("dd.MM.yyyy HH:mm"))
                         </td>
 
-                        <td>
+                        <td data-label="Kanal">
                             <span class="channel-badge compact">
                                 Trendyol
                             </span>
                         </td>
 
-                        <td>
-                            <strong>
-                                @item.ItemCount ürün
-                            </strong>
+                        <td data-label="Ürün">
+                            <div class="order-product-preview">
+                                @if (!string.IsNullOrWhiteSpace(item.FirstProductImageUrl))
+                                {
+                                    <img src="@item.FirstProductImageUrl"
+                                         alt="@item.FirstProductName"
+                                         class="order-product-image"
+                                         loading="lazy" />
+                                }
+                                else
+                                {
+                                    <div class="order-product-image order-product-placeholder">
+                                        ▦
+                                    </div>
+                                }
+
+                                <div class="order-product-info">
+                                    <strong class="order-product-name">
+                                        @(string.IsNullOrWhiteSpace(item.FirstProductName)
+                                            ? "Ürün"
+                                            : item.FirstProductName)
+                                    </strong>
+
+                                    <span class="order-product-count">
+                                        @item.ItemCount ürün
+                                    </span>
+                                </div>
+                            </div>
                         </td>
 
-                        <td>
+                        <td data-label="Tutar">
                             <strong class="order-amount">
                                 @item.TotalAmount.ToString("N2") ₺
                             </strong>
                         </td>
 
-                        <td>
+                        <td data-label="Durum">
                             <span class="status @item.StatusCss">
                                 @item.StatusText
                             </span>
                         </td>
 
-                        <td>
+                        <td data-label="" class="order-actions-cell">
                             <a href="@Url.Action("Details", "Orders", new { id = item.Id })"
                                class="order-detail-button">
                                 Detay →

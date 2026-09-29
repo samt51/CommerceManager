@@ -4,6 +4,7 @@ using CommerceManager.Domain.Orders;
 using CommerceManager.Domain.Returns;
 using Microsoft.EntityFrameworkCore;
 using CommerceManager.Domain.Products;
+using CommerceManager.Domain.Users;
 
 namespace CommerceManager.Infrastructure.Persistence;
 
@@ -20,6 +21,9 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
     public DbSet<StockMovement> StockMovements => Set<StockMovement>();
 
     public DbSet<Product> Products => Set<Product>();
+
+    public DbSet<User> Users => Set<User>();
+    public DbSet<Role> Roles => Set<Role>();
 
     public DbSet<MarketplaceIntegrationStatus> MarketplaceIntegrationStatuses
         => Set<MarketplaceIntegrationStatus>();
@@ -193,6 +197,61 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options)
             x.Type
         })
         .IsUnique();
+
+
+        var role = modelBuilder.Entity<Role>();
+
+        role.HasKey(x => x.Id);
+
+        role.Property(x => x.Name)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        role.Property(x => x.Description)
+            .HasMaxLength(500);
+
+        role.HasIndex(x => x.Name)
+            .IsUnique();
+
+
+        var user = modelBuilder.Entity<User>();
+
+        user.HasKey(x => x.Id);
+
+        user.Property(x => x.UserName)
+            .HasMaxLength(100)
+            .IsRequired();
+
+        user.Property(x => x.Email)
+            .HasMaxLength(250)
+            .IsRequired();
+
+        user.Property(x => x.PasswordHash)
+            .HasMaxLength(1000)
+            .IsRequired();
+
+        user.Property(x => x.FullName)
+            .HasMaxLength(200)
+            .IsRequired();
+
+        user.Property(x => x.IsActive)
+            .IsRequired();
+
+        user.Property(x => x.CreatedAt)
+            .IsRequired();
+
+        user.HasIndex(x => x.UserName)
+            .IsUnique();
+
+        user.HasIndex(x => x.Email)
+            .IsUnique();
+
+        user.HasIndex(x => x.RoleId);
+
+        user.HasOne(x => x.Role)
+            .WithMany()
+            .HasForeignKey(x => x.RoleId)
+            .OnDelete(DeleteBehavior.Restrict);
 
 
         var integrationStatus =

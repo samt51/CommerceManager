@@ -14,17 +14,26 @@
 
 <div class="returns-page">
 
-<div class="page-heading">
-    <div>
+<div class="returns-hero">
+    <div class="returns-hero-icon" aria-hidden="true">
+        <span>↩</span>
+    </div>
+
+    <div class="returns-hero-content">
+        <span class="returns-hero-eyebrow">İADE YÖNETİMİ</span>
         <h1>İade Yönetimi</h1>
         <p>
             Pazaryerlerinden gelen iade taleplerini
             görüntüleyin ve takip edin.
         </p>
+
+        <div class="returns-hero-market">
+            Trendyol
+        </div>
     </div>
 
-    <div class="market-badge">
-        Trendyol
+    <div class="returns-hero-decoration" aria-hidden="true">
+        ↩
     </div>
 </div>
 
@@ -35,24 +44,48 @@
     </div>
 }
 
-<div class="summary-grid returns-summary-grid">
+<div class="returns-stat-grid">
 
-    <div class="summary-card">
-        <span>Toplam İade</span>
-        <strong>@Model.Total</strong>
-        <small>Tüm iade kayıtları</small>
+    <div class="returns-stat-card returns-stat-total">
+        <div class="returns-stat-icon">
+            <span>▤</span>
+        </div>
+
+        <div class="returns-stat-content">
+            <span class="returns-stat-title">Toplam İade</span>
+            <strong>@Model.Total</strong>
+            <small>Tüm iade kayıtları</small>
+        </div>
+
+        <div class="returns-stat-arrow" aria-hidden="true">›</div>
     </div>
 
-    <div class="summary-card">
-        <span>Bu Sayfada Bekleyen</span>
-        <strong>@pending</strong>
-        <small>İşlem bekleyen iadeler</small>
+    <div class="returns-stat-card returns-stat-pending">
+        <div class="returns-stat-icon">
+            <span>◷</span>
+        </div>
+
+        <div class="returns-stat-content">
+            <span class="returns-stat-title">Bu Sayfada Bekleyen</span>
+            <strong>@pending</strong>
+            <small>İşlem bekleyen iadeler</small>
+        </div>
+
+        <div class="returns-stat-arrow" aria-hidden="true">›</div>
     </div>
 
-    <div class="summary-card">
-        <span>Bu Sayfada Kabul</span>
-        <strong>@accepted</strong>
-        <small>Stoğa geri alınanlar</small>
+    <div class="returns-stat-card returns-stat-accepted">
+        <div class="returns-stat-icon">
+            <span>✓</span>
+        </div>
+
+        <div class="returns-stat-content">
+            <span class="returns-stat-title">Bu Sayfada Kabul</span>
+            <strong>@accepted</strong>
+            <small>Stoğa geri alınanlar</small>
+        </div>
+
+        <div class="returns-stat-arrow" aria-hidden="true">›</div>
     </div>
 
 </div>
@@ -137,14 +170,14 @@
             @foreach (var item in Model.Items)
             {
                 <tr>
-                    <td>
+                    <td data-label="Sipariş" class="return-order-cell">
                         <a href="@Url.Action("Details", "Returns", new { id = item.Id })"
                            class="order-number return-detail-link">
                             #@item.OrderNumber
                         </a>
                     </td>
 
-                    <td class="product-cell">
+                    <td data-label="Ürün" class="product-cell return-product-cell">
                         <div class="product-info">
                             @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                             {
@@ -166,29 +199,29 @@
                         </div>
                     </td>
 
-                    <td>
+                    <td data-label="Barkod">
                         <span class="barcode">
                             @item.Barcode
                         </span>
                     </td>
 
-                    <td>
-                        @item.Quantity
+                    <td data-label="Adet">
+                        <strong>@item.Quantity</strong>
                     </td>
 
-                    <td>
+                    <td data-label="Kanal">
                         <span class="channel-badge">
                             @item.ChannelText
                         </span>
                     </td>
 
-                    <td>
+                    <td data-label="Durum">
                         <span class="status @item.StatusCss">
                             @item.StatusText
                         </span>
                     </td>
 
-                    <td>
+                    <td data-label="Stok">
                         @if (item.StockApplied)
                         {
                             <span class="stock-ok">
@@ -203,11 +236,11 @@
                         }
                     </td>
 
-                    <td>
+                    <td data-label="Son Güncelleme" class="return-updated-cell">
                         @(item.ExternalLastModifiedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm"))
                     </td>
 
-                    <td class="return-action-cell">
+                    <td data-label="" class="return-action-cell">
                         <a href="@Url.Action("Details", "Returns", new { id = item.Id })"
                            class="order-detail-button">
                             Detay →

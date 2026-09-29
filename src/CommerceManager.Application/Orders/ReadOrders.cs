@@ -3,7 +3,8 @@ using MediatR;
 namespace CommerceManager.Application.Orders;
 
 public sealed record OrderRow(Guid Id, string? ExternalOrderId, string? OrderNumber,
-    string? Status, DateTimeOffset OrderedAt, decimal TotalAmount, int ItemCount);
+    string? Status, DateTimeOffset OrderedAt, decimal TotalAmount, int ItemCount,
+    string? FirstProductName, string? FirstProductImageUrl);
 public sealed record OrderLineRow(string ExternalLineId, string? Barcode,
     string ProductName, string? ImageUrl, int Quantity, decimal UnitPrice);
 public sealed record OrderDetails(Guid Id, string? ExternalOrderId,

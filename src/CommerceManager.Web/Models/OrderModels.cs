@@ -17,6 +17,8 @@ public sealed class OrderRow
     public DateTimeOffset OrderedAt { get; set; }
     public decimal TotalAmount { get; set; }
     public int ItemCount { get; set; }
+    public string? FirstProductName { get; set; }
+    public string? FirstProductImageUrl { get; set; }
 
     public string StatusText => Status switch
     {

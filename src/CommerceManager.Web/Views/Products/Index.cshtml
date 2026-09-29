@@ -121,7 +121,7 @@
                 {
                     <tr>
 
-                        <td>
+                        <td data-label="Ürün">
                             <div class="stock-product">
 
                                 @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
@@ -156,42 +156,42 @@
                             </div>
                         </td>
 
-                        <td>
+                        <td data-label="Stok Kodu">
                             @(string.IsNullOrWhiteSpace(item.StockCode)
                                 ? "—"
                                 : item.StockCode)
                         </td>
 
-                        <td class="stock-barcode"
+                        <td data-label="Barkod" class="stock-barcode"
                             title="@item.Barcode">
                             @item.Barcode
                         </td>
 
-                        <td>
+                        <td data-label="Trendyol Ürün ID">
                             @(string.IsNullOrWhiteSpace(item.ExternalProductId)
                                 ? "—"
                                 : item.ExternalProductId)
                         </td>
 
-                        <td>
+                        <td data-label="Kanal">
                             <span class="channel-badge compact">
                                 Trendyol
                             </span>
                         </td>
 
-                        <td>
+                        <td data-label="Stok">
                             <strong class="stock-quantity">
                                 @item.StockText
                             </strong>
                         </td>
 
-                        <td>
+                        <td data-label="Durum">
                             <span class="status @item.StockStatusCss">
                                 @item.StockStatusText
                             </span>
                         </td>
 
-                        <td class="order-date stock-table-date">
+                        <td data-label="Güncelleme" class="order-date stock-table-date">
                             @(item.UpdatedAt
                                 .ToLocalTime()
                                 .ToString("dd.MM.yyyy HH:mm"))

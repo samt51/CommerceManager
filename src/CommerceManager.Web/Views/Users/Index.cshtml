@@ -1,0 +1,342 @@
+@model CommerceManager.Web.Models.Users.UsersIndexViewModel
+
+@{
+    ViewData["Title"] = "Kullanıcılar";
+
+    var users = Model.Users;
+    var activeCount = users.Count(x => x.IsActive);
+    var adminCount = users.Count(x =>
+        string.Equals(x.Role, "Admin", StringComparison.OrdinalIgnoreCase));
+}
+
+<div class="users-page">
+
+    <div class="page-heading users-heading">
+        <div>
+            <h1>Kullanıcı Yönetimi</h1>
+            <p>Sistem kullanıcılarını, rollerini ve erişim durumlarını yönetin.</p>
+        </div>
+
+        <button type="button"
+                class="users-primary-button"
+                id="openCreateUserModal">
+            <span>＋</span>
+            Yeni Kullanıcı
+        </button>
+    </div>
+
+    @if (TempData["SuccessMessage"] is string success)
+    {
+        <div class="profile-alert profile-alert-success">
+            <span>✓</span>
+            @success
+        </div>
+    }
+
+    <div class="users-summary-grid">
+        <div class="users-summary-card">
+            <span>Toplam Kullanıcı</span>
+            <strong>@users.Count</strong>
+        </div>
+
+        <div class="users-summary-card">
+            <span>Aktif Kullanıcı</span>
+            <strong>@activeCount</strong>
+        </div>
+
+        <div class="users-summary-card">
+            <span>Admin</span>
+            <strong>@adminCount</strong>
+        </div>
+    </div>
+
+    <section class="users-card">
+
+        <div class="users-card-header">
+            <div>
+                <h2>Kullanıcılar</h2>
+                <p>Sisteme erişimi olan tüm kullanıcılar.</p>
+            </div>
+        </div>
+
+        @if (users.Count == 0)
+        {
+            <div class="users-empty">
+                Henüz kullanıcı bulunmuyor.
+            </div>
+        }
+        else
+        {
+            <div class="users-table-wrap">
+                <table class="users-table">
+                    <thead>
+                        <tr>
+                            <th>Kullanıcı</th>
+                            <th>Rol</th>
+                            <th>Durum</th>
+                            <th>Son Giriş</th>
+                            <th></th>
+                        </tr>
+                    </thead>
+
+                    <tbody>
+                    @foreach (var user in users)
+                    {
+                        var initial =
+                            string.IsNullOrWhiteSpace(user.FullName)
+                                ? "K"
+                                : user.FullName[..1].ToUpperInvariant();
+
+                        <tr>
+                            <td data-label="Kullanıcı">
+                                <div class="users-person">
+                                    <div class="users-avatar">@initial</div>
+
+                                    <div>
+                                        <strong>@user.FullName</strong>
+                                        <span>@@@user.UserName · @user.Email</span>
+                                    </div>
+                                </div>
+                            </td>
+
+                            <td data-label="Rol">
+                                <span class="users-role @(user.Role == "Admin" ? "admin" : "")">
+                                    @user.Role
+                                </span>
+                            </td>
+
+                            <td data-label="Durum">
+                                <span class="users-status @(user.IsActive ? "active" : "passive")">
+                                    <i></i>
+                                    @(user.IsActive ? "Aktif" : "Pasif")
+                                </span>
+                            </td>
+
+                            <td data-label="Son Giriş">
+                                <span class="users-last-login">
+                                    @(user.LastLoginAt.HasValue
+                                        ? user.LastLoginAt.Value.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                                        : "Henüz giriş yapmadı")
+                                </span>
+                            </td>
+
+                            <td class="users-actions-cell">
+                                <div class="users-row-actions">
+                                    <a asp-controller="Users"
+                                       asp-action="Edit"
+                                       asp-route-id="@user.Id"
+                                       class="users-action-button">
+                                        Düzenle
+                                    </a>
+
+                                    <a asp-controller="Users"
+                                       asp-action="ResetPassword"
+                                       asp-route-id="@user.Id"
+                                       class="users-action-button">
+                                        Şifre
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                    </tbody>
+                </table>
+            </div>
+        }
+    </section>
+</div>
+
+
+<div class="user-modal-backdrop"
+     id="createUserModal"
+     aria-hidden="true">
+
+    <div class="user-modal"
+         role="dialog"
+         aria-modal="true"
+         aria-labelledby="createUserModalTitle">
+
+        <div class="user-modal-header">
+            <div class="user-modal-title">
+                <div class="user-modal-icon">+</div>
+
+                <div>
+                    <h2 id="createUserModalTitle">Yeni Kullanıcı</h2>
+                    <p>Sisteme erişebilecek yeni bir kullanıcı oluşturun.</p>
+                </div>
+            </div>
+
+            <button type="button"
+                    class="user-modal-close"
+                    id="closeCreateUserModal"
+                    aria-label="Kapat">×</button>
+        </div>
+
+        <form asp-controller="Users"
+              asp-action="Create"
+              method="post"
+              class="user-modal-form">
+
+            @Html.AntiForgeryToken()
+
+            <div class="user-modal-body">
+
+                <div class="user-form-group user-form-full">
+                    <label for="createFullName">Ad Soyad</label>
+
+                    <input id="createFullName"
+                           name="FullName"
+                           type="text"
+                           maxlength="200"
+                           autocomplete="name"
+                           placeholder="Örn. Ahmet Yılmaz"
+                           required />
+                </div>
+
+                <div class="user-form-grid">
+
+                    <div class="user-form-group">
+                        <label for="createUserName">Kullanıcı Adı</label>
+
+                        <input id="createUserName"
+                               name="UserName"
+                               type="text"
+                               maxlength="100"
+                               autocomplete="username"
+                               placeholder="Örn. ahmet"
+                               required />
+                    </div>
+
+                    <div class="user-form-group">
+                        <label for="createEmail">E-posta</label>
+
+                        <input id="createEmail"
+                               name="Email"
+                               type="email"
+                               maxlength="250"
+                               autocomplete="email"
+                               placeholder="ornek@firma.com"
+                               required />
+                    </div>
+
+                    <div class="user-form-group">
+                        <label for="createRoleId">Rol</label>
+
+                        <select id="createRoleId"
+                                name="RoleId"
+                                required>
+
+                            <option value="">Rol seçin</option>
+
+                            @foreach (var role in Model.Roles)
+                            {
+                                <option value="@role.Id">@role.Name</option>
+                            }
+
+                        </select>
+                    </div>
+
+                    <div class="user-form-group">
+                        <label for="createPassword">Şifre</label>
+
+                        <div class="user-password-wrap">
+
+                            <input id="createPassword"
+                                   name="Password"
+                                   type="password"
+                                   minlength="8"
+                                   autocomplete="new-password"
+                                   placeholder="En az 8 karakter"
+                                   required />
+
+                            <button type="button"
+                                    class="user-password-toggle"
+                                    id="toggleCreatePassword">
+                                Göster
+                            </button>
+
+                        </div>
+                    </div>
+
+                </div>
+
+                <div class="user-modal-note">
+                    <strong>Bilgi</strong>
+                    <span>
+                        Kullanıcı oluşturulduktan sonra seçilen rolün
+                        yetkileriyle sisteme giriş yapabilir.
+                    </span>
+                </div>
+
+            </div>
+
+            <div class="user-modal-footer">
+
+                <button type="button"
+                        class="user-modal-cancel"
+                        id="cancelCreateUserModal">
+                    Vazgeç
+                </button>
+
+                <button type="submit"
+                        class="user-modal-submit">
+                    Kullanıcı Oluştur
+                </button>
+
+            </div>
+
+        </form>
+    </div>
+</div>
+
+<script>
+(() => {
+    const modal = document.getElementById("createUserModal");
+    const openButton = document.getElementById("openCreateUserModal");
+    const closeButton = document.getElementById("closeCreateUserModal");
+    const cancelButton = document.getElementById("cancelCreateUserModal");
+
+    const password = document.getElementById("createPassword");
+    const passwordToggle = document.getElementById("toggleCreatePassword");
+
+    function openModal() {
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+        document.body.classList.add("modal-open");
+
+        setTimeout(() => {
+            document.getElementById("createFullName")?.focus();
+        }, 100);
+    }
+
+    function closeModal() {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+        document.body.classList.remove("modal-open");
+    }
+
+    openButton?.addEventListener("click", openModal);
+    closeButton?.addEventListener("click", closeModal);
+    cancelButton?.addEventListener("click", closeModal);
+
+    modal?.addEventListener("click", event => {
+        if (event.target === modal) {
+            closeModal();
+        }
+    });
+
+    document.addEventListener("keydown", event => {
+        if (event.key === "Escape" &&
+            modal?.classList.contains("open")) {
+            closeModal();
+        }
+    });
+
+    passwordToggle?.addEventListener("click", () => {
+        const show = password.type === "password";
+
+        password.type = show ? "text" : "password";
+        passwordToggle.textContent = show ? "Gizle" : "Göster";
+    });
+})();
+</script>

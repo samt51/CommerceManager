@@ -311,6 +311,80 @@ namespace CommerceManager.Infrastructure.Persistence.Migrations
                     b.ToTable("OrderReturns");
                 });
 
+            modelBuilder.Entity("CommerceManager.Domain.Users.Role", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("Roles");
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Users.User", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Email")
+                        .IsRequired()
+                        .HasMaxLength(250)
+                        .HasColumnType("nvarchar(250)");
+
+                    b.Property<string>("FullName")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<DateTimeOffset?>("LastLoginAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("PasswordHash")
+                        .IsRequired()
+                        .HasMaxLength(1000)
+                        .HasColumnType("nvarchar(1000)");
+
+                    b.Property<Guid>("RoleId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("UserName")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Email")
+                        .IsUnique();
+
+                    b.HasIndex("RoleId");
+
+                    b.HasIndex("UserName")
+                        .IsUnique();
+
+                    b.ToTable("Users");
+                });
+
             modelBuilder.Entity("CommerceManager.Domain.Orders.OrderItem", b =>
                 {
                     b.HasOne("CommerceManager.Domain.Orders.Order", null)
@@ -333,6 +407,17 @@ namespace CommerceManager.Infrastructure.Persistence.Migrations
                         .HasForeignKey("OrderItemId")
                         .OnDelete(DeleteBehavior.NoAction)
                         .IsRequired();
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Users.User", b =>
+                {
+                    b.HasOne("CommerceManager.Domain.Users.Role", "Role")
+                        .WithMany()
+                        .HasForeignKey("RoleId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Role");
                 });
 
             modelBuilder.Entity("CommerceManager.Domain.Orders.Order", b =>

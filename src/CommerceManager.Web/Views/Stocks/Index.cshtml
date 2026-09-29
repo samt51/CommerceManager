@@ -11,15 +11,28 @@
         : 0;
 }
 
-<div class="page-heading">
-    <div>
-        <h1>Stok Yönetimi</h1>
-        <p>Trendyol ürün stoklarınızı görüntüleyin ve takip edin.</p>
+<div class="stocks-hero">
+    <div class="stocks-hero-icon" aria-hidden="true">
+        ▦
     </div>
 
-    <span class="channel-badge">
-        Trendyol
-    </span>
+    <div class="stocks-hero-content">
+        <span class="stocks-hero-eyebrow">ENVANTER YÖNETİMİ</span>
+
+        <h1>Stok Yönetimi</h1>
+
+        <p>
+            Trendyol ürün stoklarınızı görüntüleyin ve takip edin.
+        </p>
+
+        <span class="stocks-hero-channel">
+            Trendyol
+        </span>
+    </div>
+
+    <div class="stocks-hero-decoration" aria-hidden="true">
+        ▦
+    </div>
 </div>
 
 @if (ViewBag.ApiError is not null)
@@ -29,41 +42,63 @@
     </div>
 }
 
-<div class="summary-grid">
+<div class="stocks-stat-grid">
 
-    <div class="summary-card">
-        <span>Toplam Ürün</span>
-        <strong>@(Model.InStockCount + Model.LowStockCount + Model.OutOfStockCount)</strong>
-        <small>Trendyol</small>
+    <div class="stocks-stat-card stocks-stat-products">
+        <div class="stocks-stat-icon">▦</div>
+
+        <div class="stocks-stat-content">
+            <span>Toplam Ürün</span>
+            <strong>
+                @(Model.InStockCount + Model.LowStockCount + Model.OutOfStockCount)
+            </strong>
+            <small>Trendyol ürünleri</small>
+        </div>
     </div>
 
-    <div class="summary-card">
-        <span>Toplam Stok</span>
-        <strong>@Model.TotalQuantity</strong>
-        <small>Adet</small>
+    <div class="stocks-stat-card stocks-stat-total">
+        <div class="stocks-stat-icon">∑</div>
+
+        <div class="stocks-stat-content">
+            <span>Toplam Stok</span>
+            <strong>@Model.TotalQuantity</strong>
+            <small>Toplam adet</small>
+        </div>
     </div>
 
-    <div class="summary-card">
-        <span>Stokta</span>
-        <strong>@Model.InStockCount</strong>
-        <small>5 adetten fazla</small>
+    <div class="stocks-stat-card stocks-stat-ok">
+        <div class="stocks-stat-icon">✓</div>
+
+        <div class="stocks-stat-content">
+            <span>Stokta</span>
+            <strong>@Model.InStockCount</strong>
+            <small>5 adetten fazla</small>
+        </div>
     </div>
 
-    <div class="summary-card">
-        <span>Düşük Stok</span>
-        <strong>@Model.LowStockCount</strong>
-        <small>1 - 5 adet</small>
+    <div class="stocks-stat-card stocks-stat-low">
+        <div class="stocks-stat-icon">!</div>
+
+        <div class="stocks-stat-content">
+            <span>Düşük Stok</span>
+            <strong>@Model.LowStockCount</strong>
+            <small>1 - 5 adet</small>
+        </div>
     </div>
 
-    <div class="summary-card">
-        <span>Tükendi</span>
-        <strong>@Model.OutOfStockCount</strong>
-        <small>0 adet</small>
+    <div class="stocks-stat-card stocks-stat-out">
+        <div class="stocks-stat-icon">×</div>
+
+        <div class="stocks-stat-content">
+            <span>Tükendi</span>
+            <strong>@Model.OutOfStockCount</strong>
+            <small>0 adet</small>
+        </div>
     </div>
 
 </div>
 
-<div class="panel">
+<div class="panel stocks-panel">
 
     <div class="panel-header">
         <div>
@@ -149,7 +184,7 @@
                 foreach (var item in Model.Items)
                 {
                     <tr>
-                        <td>
+                        <td data-label="Ürün" class="stock-product-cell">
                             <div class="stock-product">
 
                                 @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
@@ -174,35 +209,35 @@
                             </div>
                         </td>
 
-                        <td>
+                        <td data-label="Stok Kodu">
                             @(string.IsNullOrWhiteSpace(item.StockCode)
                                 ? "-"
                                 : item.StockCode)
                         </td>
 
-                        <td class="stock-barcode">
+                        <td data-label="Barkod" class="stock-barcode">
                             @item.Barcode
                         </td>
 
-                        <td>
+                        <td data-label="Kanal">
                             <span class="channel-badge compact">
                                 Trendyol
                             </span>
                         </td>
 
-                        <td>
+                        <td data-label="Stok">
                             <strong class="stock-quantity">
                                 @item.Quantity
                             </strong>
                         </td>
 
-                        <td>
+                        <td data-label="Durum">
                             <span class="status @item.StatusCss">
                                 @item.StatusText
                             </span>
                         </td>
 
-                        <td class="order-date stock-table-date">
+                        <td data-label="Son Güncelleme" class="order-date stock-table-date">
                             @(item.StockUpdatedAt
                                 .ToLocalTime()
                                 .ToString("dd.MM.yyyy HH:mm"))

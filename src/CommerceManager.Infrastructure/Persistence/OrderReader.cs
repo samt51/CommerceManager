@@ -16,8 +16,22 @@ public sealed class OrderReader(AppDbContext db) : IOrderReader
         var rows = await query.OrderByDescending(x => x.OrderedAt)
             .ThenByDescending(x => x.Id)
             .Skip(page * size).Take(size)
-            .Select(x => new OrderRow(x.Id, x.ExternalOrderId, x.OrderNumber,
-                x.Status, x.OrderedAt, x.TotalAmount, x.Items.Count))
+            .Select(x => new OrderRow(
+                x.Id,
+                x.ExternalOrderId,
+                x.OrderNumber,
+                x.Status,
+                x.OrderedAt,
+                x.TotalAmount,
+                x.Items.Count,
+                x.Items
+                    .OrderBy(i => i.ExternalLineId)
+                    .Select(i => i.ProductName)
+                    .FirstOrDefault(),
+                x.Items
+                    .OrderBy(i => i.ExternalLineId)
+                    .Select(i => i.ImageUrl)
+                    .FirstOrDefault()))
             .ToListAsync(cancellationToken);
         return new OrderPage(page, size, total, rows);
     }

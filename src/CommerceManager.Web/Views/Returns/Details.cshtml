@@ -4,23 +4,44 @@
     ViewData["Title"] = "İade Detayı";
 }
 
-<div class="return-detail-heading">
-    <div>
-        <a asp-action="Index"
-           class="back-link">
-            ← İadelere Dön
-        </a>
+<div class="return-detail-top">
+    <a asp-action="Index"
+       class="return-detail-back">
+        <span>←</span>
+        İadelere Dön
+    </a>
 
-        <h1>İade Detayı</h1>
+    <div class="return-detail-hero">
+        <div class="return-detail-hero-icon" aria-hidden="true">
+            ↩
+        </div>
 
-        <p>
-            Sipariş #@Model.OrderNumber
-        </p>
+        <div class="return-detail-hero-content">
+            <span class="return-detail-eyebrow">
+                İADE DETAYI
+            </span>
+
+            <h1>İade Detayı</h1>
+
+            <div class="return-detail-hero-meta">
+                <span class="return-detail-order-number">
+                    Sipariş #@Model.OrderNumber
+                </span>
+
+                <span class="status @Model.StatusCss return-detail-hero-status">
+                    @Model.StatusText
+                </span>
+
+                <span class="channel-badge return-detail-hero-channel">
+                    @Model.ChannelText
+                </span>
+            </div>
+        </div>
+
+        <div class="return-detail-hero-decoration" aria-hidden="true">
+            ↩
+        </div>
     </div>
-
-    <span class="status @Model.StatusCss">
-        @Model.StatusText
-    </span>
 </div>
 
 @if (ViewBag.ApiError is not null)

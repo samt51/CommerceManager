@@ -1,3 +1,4 @@
+@using System.Security.Claims
 <!DOCTYPE html>
 <html lang="tr">
 <head>
@@ -15,6 +16,24 @@
 @{
     var currentController =
         ViewContext.RouteData.Values["controller"]?.ToString();
+
+    var fullName =
+        User.FindFirst("full_name")?.Value
+        ?? User.Identity?.Name
+        ?? "Kullanıcı";
+
+    var email =
+        User.FindFirst(ClaimTypes.Email)?.Value
+        ?? string.Empty;
+
+    var role =
+        User.FindFirst(ClaimTypes.Role)?.Value
+        ?? string.Empty;
+
+    var avatarLetter =
+        string.IsNullOrWhiteSpace(fullName)
+            ? "K"
+            : fullName[..1].ToUpperInvariant();
 }
 
 <body>
@@ -74,6 +93,16 @@
 
             <div class="nav-separator"></div>
 
+            @if (User.IsInRole("Admin"))
+            {
+                <a asp-controller="Users"
+                   asp-action="Index"
+                   class="@(currentController == "Users" ? "active" : null)">
+                    <span class="nav-icon">♙</span>
+                    Kullanıcılar
+                </a>
+            }
+
             <a href="#">
                 <span class="nav-icon">⚙</span>
                 Ayarlar
@@ -81,20 +110,80 @@
 
         </nav>
 
-        <div class="sidebar-footer">
-            <div class="avatar">A</div>
-            <div>
-                <strong>Admin Kullanıcı</strong>
-                <span>admin@ticaretpanel.com</span>
+        <div class="sidebar-user">
+            <button type="button"
+                    class="sidebar-footer sidebar-user-button"
+                    id="sidebarUserButton"
+                    aria-expanded="false">
+
+                <div class="avatar">@avatarLetter</div>
+
+                <div class="sidebar-user-info">
+                    <strong>@fullName</strong>
+                    <span>@email</span>
+                </div>
+
+                <span class="sidebar-user-chevron">⌃</span>
+            </button>
+
+            <div class="sidebar-user-menu"
+                 id="sidebarUserMenu">
+
+                <div class="sidebar-user-menu-header">
+                    <strong>@fullName</strong>
+                    <span>@role</span>
+                </div>
+
+                <a asp-controller="Profile"
+                   asp-action="Index"
+                   class="sidebar-user-menu-item">
+                    <span>○</span>
+                    Profilim
+                </a>
+
+                <a asp-controller="Profile"
+                   asp-action="ChangePassword"
+                   class="sidebar-user-menu-item">
+                    <span>⌁</span>
+                    Şifre Değiştir
+                </a>
+
+                <div class="sidebar-user-menu-separator"></div>
+
+                <form asp-controller="Account"
+                      asp-action="Logout"
+                      method="post"
+                      class="sidebar-logout-form">
+
+                    @Html.AntiForgeryToken()
+
+                    <button type="submit"
+                            class="sidebar-user-menu-item sidebar-logout-button">
+                        <span>↪</span>
+                        Çıkış Yap
+                    </button>
+                </form>
             </div>
         </div>
 
     </aside>
 
+    <div class="sidebar-overlay"
+         id="sidebarOverlay"></div>
+
     <main class="main">
 
         <header class="topbar">
-            <div>
+            <div class="topbar-left">
+                <button type="button"
+                        class="mobile-menu-button"
+                        id="mobileMenuButton"
+                        aria-label="Menüyü aç"
+                        aria-expanded="false">
+                    ☰
+                </button>
+
+                <div>
                 <div class="topbar-title">
                     @ViewData["Title"]
                 </div>
@@ -102,6 +191,7 @@
                 <div class="topbar-subtitle">
                     E-Ticaret Yönetim Paneli
                 </div>
+            </div>
             </div>
 
             <div class="top-actions">
@@ -120,5 +210,63 @@
     </main>
 
 </div>
+
+<script>
+    (() => {
+        const button = document.getElementById('mobileMenuButton');
+        const sidebar = document.querySelector('.sidebar');
+        const overlay = document.getElementById('sidebarOverlay');
+
+        if (!button || !sidebar || !overlay) {
+            return;
+        }
+
+        const closeMenu = () => {
+            sidebar.classList.remove('mobile-open');
+            overlay.classList.remove('active');
+            document.body.classList.remove('menu-open');
+            button.setAttribute('aria-expanded', 'false');
+        };
+
+        button.addEventListener('click', () => {
+            const isOpen = sidebar.classList.toggle('mobile-open');
+
+            overlay.classList.toggle('active', isOpen);
+            document.body.classList.toggle('menu-open', isOpen);
+            button.setAttribute('aria-expanded', String(isOpen));
+        });
+
+        overlay.addEventListener('click', closeMenu);
+
+        sidebar.querySelectorAll('a').forEach(link => {
+            link.addEventListener('click', closeMenu);
+        });
+
+        window.addEventListener('resize', () => {
+            if (window.innerWidth > 1024) {
+                closeMenu();
+            }
+        });
+
+        const userButton = document.getElementById('sidebarUserButton');
+        const userMenu = document.getElementById('sidebarUserMenu');
+
+        userButton?.addEventListener('click', (event) => {
+            event.stopPropagation();
+
+            const isOpen = userMenu?.classList.toggle('open') ?? false;
+            userButton.setAttribute('aria-expanded', String(isOpen));
+        });
+
+        userMenu?.addEventListener('click', (event) => {
+            event.stopPropagation();
+        });
+
+        document.addEventListener('click', () => {
+            userMenu?.classList.remove('open');
+            userButton?.setAttribute('aria-expanded', 'false');
+        });
+    })();
+</script>
 </body>
 </html>
