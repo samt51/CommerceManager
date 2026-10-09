@@ -1,0 +1,191 @@
+@model CommerceManager.Web.Models.ExpensePage
+
+@{
+    ViewData["Title"] = "Giderler";
+    var selected = ViewBag.ExpenseTypeId as Guid?;
+}
+
+<div class="page-heading">
+    <div>
+        <h1>Giderler</h1>
+        <p>Her gider seçilen tipten kaydolur ve kasadan düşer. Araç harçlığı da bir gider tipidir.</p>
+    </div>
+    <button type="button" class="users-primary-button" id="openExpenseModal"><span>＋</span> Gider Ekle</button>
+</div>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="profile-alert profile-alert-success"><span>✓</span> @success</div>
+}
+@if (TempData["TypeError"] is string typeError)
+{
+    <div class="alert-error">@typeError</div>
+}
+@if (TempData["FormError"] is string formError)
+{
+    <div class="alert-error">@formError</div>
+}
+@if (ViewBag.ApiError is not null)
+{
+    <div class="alert-error">@ViewBag.ApiError</div>
+}
+
+<div class="summary-grid">
+    <div class="summary-card">
+        <span>Toplam gider</span>
+        <strong>@TurkishMoney.Format(Model.Total)</strong>
+        <small>Seçili tipe göre</small>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2>Yeni tip</h2>
+            <p>Listede olmayan gideri buradan ekleyin.</p>
+        </div>
+        <form asp-action="CreateType" method="post" class="filters">
+            @Html.AntiForgeryToken()
+            <input name="Name" class="filter-input" placeholder="Örnek: Benzin & Mazot" />
+            <button type="submit" class="filter-button">Tip Ekle</button>
+        </form>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2>Kayıtlar</h2>
+            <p>@Model.Items.Count hareket</p>
+        </div>
+        <form method="get" action="/Expenses" class="filters">
+            <select name="expenseTypeId" class="filter-input">
+                <option value="">Tüm tipler</option>
+                @foreach (var type in Model.Types)
+                {
+                    if (selected == type.Id)
+                    {
+                        <option value="@type.Id" selected>@type.Name</option>
+                    }
+                    else
+                    {
+                        <option value="@type.Id">@type.Name</option>
+                    }
+                }
+            </select>
+            <button type="submit" class="filter-button">Süz</button>
+        </form>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Tarih</th>
+                    <th>Tip</th>
+                    <th>Açıklama</th>
+                    <th>Tutar</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr><td colspan="4" class="empty">Henüz gider yok.</td></tr>
+            }
+            else
+            {
+                foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.OccurredAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>@item.TypeName</td>
+                        <td>@item.Description</td>
+                        <td>@TurkishMoney.Format(item.Amount)</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="user-modal-backdrop" id="expenseModal" aria-hidden="true">
+    <div class="user-modal" role="dialog" aria-modal="true">
+        <div class="user-modal-header">
+            <div class="user-modal-title">
+                <div class="user-modal-icon">+</div>
+                <div>
+                    <h2>Gider Ekle</h2>
+                    <p>Tutar TL olarak yazılır ve kasadan düşer.</p>
+                </div>
+            </div>
+            <button type="button" class="user-modal-close" id="closeExpenseModal" aria-label="Kapat">×</button>
+        </div>
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div class="user-modal-body">
+                <div class="user-form-group user-form-full">
+                    <label for="expenseTypeId">Gider tipi</label>
+                    <select id="expenseTypeId" name="ExpenseTypeId" required>
+                        <option value="">Seçin</option>
+                        @foreach (var type in Model.Types)
+                        {
+                            <option value="@type.Id">@type.Name</option>
+                        }
+                    </select>
+                </div>
+                <div class="user-form-group user-form-full">
+                    <label for="expenseAmount">Tutar</label>
+                    <input id="expenseAmount" name="AmountText" inputmode="decimal" placeholder="1.000,50" required />
+                </div>
+                <div class="user-form-group user-form-full">
+                    <label for="expenseDescription">Açıklama</label>
+                    <input id="expenseDescription" name="Description" maxlength="500" placeholder="Örnek: 34 ABC 123 harçlık" required />
+                </div>
+            </div>
+            <div class="user-modal-footer">
+                <button type="button" class="user-modal-cancel" id="cancelExpenseModal">Vazgeç</button>
+                <button type="submit" class="user-modal-submit">Gideri Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(() => {
+    const modal = document.getElementById("expenseModal");
+    const amount = document.getElementById("expenseAmount");
+    const open = () => {
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+        amount?.focus();
+    };
+    const close = () => {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+    };
+    amount?.addEventListener("blur", () => {
+        const digits = amount.value.replace(/[^\d,]/g, "");
+        if (!digits) return;
+        const normalized = digits.includes(",")
+            ? digits.replace(/\./g, "")
+            : digits;
+        const number = Number(normalized.replace(",", "."));
+        if (!Number.isFinite(number)) return;
+        amount.value = new Intl.NumberFormat("tr-TR", {
+            minimumFractionDigits: 2,
+            maximumFractionDigits: 2,
+            useGrouping: false
+        }).format(number);
+    });
+    document.getElementById("openExpenseModal")?.addEventListener("click", open);
+    document.getElementById("closeExpenseModal")?.addEventListener("click", close);
+    document.getElementById("cancelExpenseModal")?.addEventListener("click", close);
+    modal?.addEventListener("click", event => {
+        if (event.target === modal) close();
+    });
+})();
+</script>
+@if (TempData["OpenModal"] as string == "expense")
+{
+    <script>document.getElementById("expenseModal")?.classList.add("open");</script>
+}

@@ -1,5 +1,42 @@
 namespace CommerceManager.Web.Models;
 
+public sealed class BusinessOverviewModel
+{
+    public decimal RetailRevenue { get; set; }
+
+    public int RetailSales { get; set; }
+
+    public decimal TrendyolRevenue { get; set; }
+
+    public int TrendyolOrders { get; set; }
+
+    public decimal WebsiteRevenue { get; set; }
+
+    public int WebsiteOrders { get; set; }
+
+    public decimal CashBalance { get; set; }
+
+    public decimal TodayExpenses { get; set; }
+
+    public int OnHandQuantity { get; set; }
+
+    public int OutOfStockProducts { get; set; }
+
+    public bool TrendyolFinanceAvailable { get; set; }
+
+    public decimal TrendyolCommission { get; set; }
+
+    public decimal TrendyolDiscount { get; set; }
+
+    public decimal TrendyolSellerRevenue { get; set; }
+
+    public string? ApiError { get; set; }
+
+    public decimal TotalRevenue => RetailRevenue + TrendyolRevenue + WebsiteRevenue;
+
+    public int TotalSales => RetailSales + TrendyolOrders + WebsiteOrders;
+}
+
 public sealed class DashboardViewModel
 {
     public string SelectedPeriod { get; set; } = "this-month";

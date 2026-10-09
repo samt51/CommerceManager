@@ -2,14 +2,18 @@ using CommerceManager.Application.Integrations.Trendyol;
 using CommerceManager.Domain.Inventory;
 using CommerceManager.Domain.Orders;
 using CommerceManager.Domain.Returns;
+using CommerceManager.Infrastructure.Catalog;
 using CommerceManager.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace CommerceManager.Infrastructure.Integrations.Trendyol;
 
 public sealed class TrendyolReturnStore(
     AppDbContext db,
-    ITrendyolInventoryReader inventoryReader)
+    ITrendyolInventoryReader inventoryReader,
+    CatalogStockApplier catalogStock,
+    ILogger<TrendyolReturnStore> logger)
     : ITrendyolReturnStore
 {
     public async Task<TrendyolReturnStoreResult> UpsertAsync(
@@ -94,16 +98,10 @@ public sealed class TrendyolReturnStore(
                         barcode,
                         cancellationToken);
 
-                if (inventory is null)
-                {
-                    throw new InvalidOperationException(
-                        $"Trendyol inventory not found for barcode {barcode}.");
-                }
-
                 stock = ChannelStock.Create(
                     SalesChannel.Trendyol,
                     barcode,
-                    inventory.Quantity);
+                    inventory?.Quantity ?? 0);
 
                 db.ChannelStocks.Add(stock);
             }
@@ -129,6 +127,23 @@ public sealed class TrendyolReturnStore(
                         1,
                         "TrendyolReturn",
                         item.ClaimItemId));
+            }
+
+            var catalogApplied = await catalogStock.TryApplyAsync(
+                SalesChannel.Trendyol,
+                barcode,
+                1,
+                StockMovementType.Return,
+                "TrendyolReturn",
+                item.ClaimItemId,
+                cancellationToken);
+
+            if (!catalogApplied)
+            {
+                logger.LogWarning(
+                    "Genel stok ürünü bulunamadı. Barkod {Barcode} eşleşmediği için iade {ClaimItemId} genel stoka eklenmedi.",
+                    barcode,
+                    item.ClaimItemId);
             }
 
             orderReturn.MarkStockApplied(

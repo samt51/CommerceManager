@@ -1,3 +1,4 @@
+using CommerceManager.Application.Integrations.Trendyol;
 using CommerceManager.Application.Products;
 using CommerceManager.Domain.Orders;
 using Microsoft.EntityFrameworkCore;
@@ -5,7 +6,8 @@ using Microsoft.EntityFrameworkCore;
 namespace CommerceManager.Infrastructure.Persistence;
 
 public sealed class ProductReader(
-    AppDbContext db)
+    AppDbContext db,
+    ITrendyolInventoryReader trendyolInventory)
     : IProductReader
 {
     public async Task<ProductPage> ListTrendyolAsync(
@@ -152,10 +154,30 @@ public sealed class ProductReader(
                 product.UpdatedAt,
                 stock == null
                     ? (DateTimeOffset?)null
-                    : stock.UpdatedAt);
+                    : stock.UpdatedAt,
+                null,
+                null);
 
-        return await query.SingleOrDefaultAsync(
-            cancellationToken);
+        var details = await query.SingleOrDefaultAsync(cancellationToken);
+        if (details is null || string.IsNullOrWhiteSpace(details.Barcode))
+            return details;
+
+        try
+        {
+            var live = await trendyolInventory.GetByBarcodeAsync(details.Barcode, cancellationToken);
+            if (live is null)
+                return details;
+
+            return details with
+            {
+                SalePrice = live.SalePrice,
+                ListPrice = live.ListPrice
+            };
+        }
+        catch (HttpRequestException)
+        {
+            return details;
+        }
     }
 
 }

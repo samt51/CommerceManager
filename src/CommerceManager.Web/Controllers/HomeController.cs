@@ -4,59 +4,26 @@ using Microsoft.AspNetCore.Mvc;
 
 namespace CommerceManager.Web.Controllers;
 
-public sealed class HomeController(
-    IHttpClientFactory httpClientFactory)
-    : Controller
+public sealed class HomeController(IHttpClientFactory httpClientFactory) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Index(
-        [FromQuery] string period = "this-month",
-        CancellationToken cancellationToken = default)
+    public async Task<IActionResult> Index(CancellationToken cancellationToken)
     {
-        var allowedPeriods = new HashSet<string>(StringComparer.OrdinalIgnoreCase)
-        {
-            "this-month",
-            "last-30-days",
-            "last-3-months",
-            "last-6-months",
-            "this-year",
-            "all-time"
-        };
-
-        if (!allowedPeriods.Contains(period))
-            period = "this-month";
-
-        var model = new DashboardViewModel
-        {
-            SelectedPeriod = period
-        };
+        var model = new BusinessOverviewModel();
 
         try
         {
-            var client =
-                httpClientFactory.CreateClient("api");
-
-            var result =
-                await client.GetFromJsonAsync<DashboardViewModel>(
-                    $"api/dashboard/trendyol?period={Uri.EscapeDataString(period)}",
-                    cancellationToken);
-
-            if (result is not null)
-            {
-                model = result;
-                model.SelectedPeriod = period;
-            }
+            model = await httpClientFactory.CreateClient("api")
+                .GetFromJsonAsync<BusinessOverviewModel>("api/dashboard/overview", cancellationToken)
+                ?? new BusinessOverviewModel();
         }
         catch (HttpRequestException)
         {
-            model.ApiError =
-                "Dashboard verileri alınırken API bağlantısı kurulamadı.";
+            model.ApiError = "Özet alınırken API bağlantısı kurulamadı.";
         }
-        catch (TaskCanceledException) when (
-            !cancellationToken.IsCancellationRequested)
+        catch (TaskCanceledException) when (!cancellationToken.IsCancellationRequested)
         {
-            model.ApiError =
-                "Dashboard API zaman aşımına uğradı.";
+            model.ApiError = "Özet zaman aşımına uğradı.";
         }
 
         return View(model);

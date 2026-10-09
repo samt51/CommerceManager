@@ -1,38 +1,24 @@
-@model CommerceManager.Web.Models.StockPage
+@model CommerceManager.Web.Models.ProductPage
 
 @{
-    ViewData["Title"] = "Stok Yönetimi";
+    ViewData["Title"] = "Trendyol Ürünleri";
 
     string? search = ViewBag.Search as string;
-    string? selectedStatus = ViewBag.StockStatus as string;
 
     var totalPages = Model.Size > 0
         ? (int)Math.Ceiling(Model.Total / (double)Model.Size)
         : 0;
 }
 
-<div class="stocks-hero">
-    <div class="stocks-hero-icon" aria-hidden="true">
-        ▦
+<div class="page-heading">
+    <div>
+        <h1>Trendyol Ürünleri</h1>
+        <p>Trendyol'dan senkronlanan entegrasyon kataloğu. Kendi ürünleriniz Ürünler sayfasındadır.</p>
     </div>
 
-    <div class="stocks-hero-content">
-        <span class="stocks-hero-eyebrow">ENVANTER YÖNETİMİ</span>
-
-        <h1>Stok Yönetimi</h1>
-
-        <p>
-            Trendyol ürün stoklarınızı görüntüleyin ve takip edin.
-        </p>
-
-        <span class="stocks-hero-channel">
-            Trendyol
-        </span>
-    </div>
-
-    <div class="stocks-hero-decoration" aria-hidden="true">
-        ▦
-    </div>
+    <span class="channel-badge">
+        Trendyol
+    </span>
 </div>
 
 @if (ViewBag.ApiError is not null)
@@ -42,72 +28,38 @@
     </div>
 }
 
-<div class="stocks-stat-grid">
+<div class="summary-grid">
 
-    <div class="stocks-stat-card stocks-stat-products">
-        <div class="stocks-stat-icon">▦</div>
-
-        <div class="stocks-stat-content">
-            <span>Toplam Ürün</span>
-            <strong>
-                @(Model.InStockCount + Model.LowStockCount + Model.OutOfStockCount)
-            </strong>
-            <small>Trendyol ürünleri</small>
-        </div>
+    <div class="summary-card">
+        <span>Toplam Ürün</span>
+        <strong>@(Model.WithStockCount + Model.WithoutStockCount)</strong>
+        <small>Trendyol kataloğu</small>
     </div>
 
-    <div class="stocks-stat-card stocks-stat-total">
-        <div class="stocks-stat-icon">∑</div>
-
-        <div class="stocks-stat-content">
-            <span>Toplam Stok</span>
-            <strong>@Model.TotalQuantity</strong>
-            <small>Toplam adet</small>
-        </div>
+    <div class="summary-card">
+        <span>Stok Kaydı Olan</span>
+        <strong>@Model.WithStockCount</strong>
+        <small>ChannelStock eşleşmesi</small>
     </div>
 
-    <div class="stocks-stat-card stocks-stat-ok">
-        <div class="stocks-stat-icon">✓</div>
-
-        <div class="stocks-stat-content">
-            <span>Stokta</span>
-            <strong>@Model.InStockCount</strong>
-            <small>5 adetten fazla</small>
-        </div>
-    </div>
-
-    <div class="stocks-stat-card stocks-stat-low">
-        <div class="stocks-stat-icon">!</div>
-
-        <div class="stocks-stat-content">
-            <span>Düşük Stok</span>
-            <strong>@Model.LowStockCount</strong>
-            <small>1 - 5 adet</small>
-        </div>
-    </div>
-
-    <div class="stocks-stat-card stocks-stat-out">
-        <div class="stocks-stat-icon">×</div>
-
-        <div class="stocks-stat-content">
-            <span>Tükendi</span>
-            <strong>@Model.OutOfStockCount</strong>
-            <small>0 adet</small>
-        </div>
+    <div class="summary-card">
+        <span>Stok Kaydı Olmayan</span>
+        <strong>@Model.WithoutStockCount</strong>
+        <small>Katalogda mevcut</small>
     </div>
 
 </div>
 
-<div class="panel stocks-panel">
+<div class="panel">
 
     <div class="panel-header">
         <div>
-            <h2>Ürün Stokları</h2>
+            <h2>Ürün Kataloğu</h2>
             <p>@Model.Total kayıt bulundu</p>
         </div>
 
         <form method="get"
-              action="/Stocks"
+              action="/Products/Trendyol"
               class="filters">
 
             <input type="text"
@@ -116,39 +68,22 @@
                    placeholder="Ürün, barkod veya stok kodu..."
                    class="filter-input" />
 
-            <select name="stockStatus"
-                    class="filter-select">
-
-                <option value=""
-                        selected="@(string.IsNullOrWhiteSpace(selectedStatus))">
-                    Tüm Stoklar
-                </option>
-
-                <option value="inStock"
-                        selected="@(selectedStatus?.Equals("inStock", StringComparison.OrdinalIgnoreCase) == true)">
-                    Stokta
-                </option>
-
-                <option value="lowStock"
-                        selected="@(selectedStatus?.Equals("lowStock", StringComparison.OrdinalIgnoreCase) == true)">
-                    Düşük Stok
-                </option>
-
-                <option value="outOfStock"
-                        selected="@(selectedStatus?.Equals("outOfStock", StringComparison.OrdinalIgnoreCase) == true)">
-                    Tükendi
-                </option>
-
-            </select>
-
             <input type="hidden"
                    name="size"
                    value="@Model.Size" />
 
             <button type="submit"
                     class="filter-button">
-                Filtrele
+                Ara
             </button>
+
+            @if (!string.IsNullOrWhiteSpace(search))
+            {
+                <a href="/Products/Trendyol"
+                   class="filter-clear">
+                    Temizle
+                </a>
+            }
 
         </form>
     </div>
@@ -161,10 +96,11 @@
                     <th>Ürün</th>
                     <th>Stok Kodu</th>
                     <th>Barkod</th>
+                    <th>Trendyol Ürün ID</th>
                     <th>Kanal</th>
                     <th>Stok</th>
                     <th>Durum</th>
-                    <th>Son Güncelleme</th>
+                    <th>Güncelleme</th>
                 </tr>
             </thead>
 
@@ -173,7 +109,7 @@
             @if (Model.Items.Count == 0)
             {
                 <tr>
-                    <td colspan="7"
+                    <td colspan="8"
                         class="empty">
                         Ürün bulunamadı.
                     </td>
@@ -184,13 +120,14 @@
                 foreach (var item in Model.Items)
                 {
                     <tr>
-                        <td data-label="Ürün" class="stock-product-cell">
+
+                        <td data-label="Ürün">
                             <div class="stock-product">
 
                                 @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                                 {
                                     <img src="@item.ImageUrl"
-                                         alt="@item.ProductName"
+                                         alt="@item.Name"
                                          class="stock-product-image" />
                                 }
                                 else
@@ -201,9 +138,19 @@
                                 }
 
                                 <div>
-                                    <strong class="stock-product-name">
-                                        @item.ProductName
-                                    </strong>
+                                    <a href="@Url.Action("Details", "Products", new { id = item.Id })"
+                                       class="product-name-link">
+                                        <strong class="stock-product-name">
+                                            @item.Name
+                                        </strong>
+                                    </a>
+
+                                    @if (!string.IsNullOrWhiteSpace(item.ProductMainId))
+                                    {
+                                        <small class="product-main-id">
+                                            @item.ProductMainId
+                                        </small>
+                                    }
                                 </div>
 
                             </div>
@@ -211,12 +158,19 @@
 
                         <td data-label="Stok Kodu">
                             @(string.IsNullOrWhiteSpace(item.StockCode)
-                                ? "-"
+                                ? "—"
                                 : item.StockCode)
                         </td>
 
-                        <td data-label="Barkod" class="stock-barcode">
+                        <td data-label="Barkod" class="stock-barcode"
+                            title="@item.Barcode">
                             @item.Barcode
+                        </td>
+
+                        <td data-label="Trendyol Ürün ID">
+                            @(string.IsNullOrWhiteSpace(item.ExternalProductId)
+                                ? "—"
+                                : item.ExternalProductId)
                         </td>
 
                         <td data-label="Kanal">
@@ -227,21 +181,22 @@
 
                         <td data-label="Stok">
                             <strong class="stock-quantity">
-                                @item.Quantity
+                                @item.StockText
                             </strong>
                         </td>
 
                         <td data-label="Durum">
-                            <span class="status @item.StatusCss">
-                                @item.StatusText
+                            <span class="status @item.StockStatusCss">
+                                @item.StockStatusText
                             </span>
                         </td>
 
-                        <td data-label="Son Güncelleme" class="order-date stock-table-date">
-                            @(item.StockUpdatedAt
+                        <td data-label="Güncelleme" class="order-date stock-table-date">
+                            @(item.UpdatedAt
                                 .ToLocalTime()
                                 .ToString("dd.MM.yyyy HH:mm"))
                         </td>
+
                     </tr>
                 }
             }
@@ -264,13 +219,12 @@
 
                 @if (Model.Page > 0)
                 {
-                    <a href="@Url.Action("Index", "Stocks",
+                    <a href="@Url.Action("Trendyol", "Products",
                                  new
                                  {
                                      page = Model.Page - 1,
                                      size = Model.Size,
-                                     search,
-                                     stockStatus = selectedStatus
+                                     search
                                  })">
                         ← Önceki
                     </a>
@@ -278,13 +232,12 @@
 
                 @if (Model.Page + 1 < totalPages)
                 {
-                    <a href="@Url.Action("Index", "Stocks",
+                    <a href="@Url.Action("Trendyol", "Products",
                                  new
                                  {
                                      page = Model.Page + 1,
                                      size = Model.Size,
-                                     search,
-                                     stockStatus = selectedStatus
+                                     search
                                  })">
                         Sonraki →
                     </a>

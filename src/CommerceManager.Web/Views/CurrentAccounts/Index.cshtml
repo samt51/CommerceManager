@@ -1,0 +1,173 @@
+@model CommerceManager.Web.Models.CurrentAccountPage
+
+@{
+    ViewData["Title"] = "Cari";
+    string? search = ViewBag.Search as string;
+}
+
+<div class="page-heading">
+    <div>
+        <h1>Cari</h1>
+        <p>Müşteri ve tedarikçi hesapları. Bakiye borç eksi alacaktır. Artı bakiye size borçlu, eksi bakiye sizin borçlu olduğunuz anlamına gelir.</p>
+    </div>
+
+    <button type="button" class="users-primary-button" id="openCariModal">
+        <span>＋</span>
+        Cari Ekle
+    </button>
+</div>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="profile-alert profile-alert-success">
+        <span>✓</span>
+        @success
+    </div>
+}
+
+@if (ViewBag.ApiError is not null)
+{
+    <div class="alert-error">@ViewBag.ApiError</div>
+}
+
+@if (TempData["FormError"] is string formError)
+{
+    <div class="alert-error">@formError</div>
+}
+
+<div class="summary-grid">
+    <div class="summary-card">
+        <span>Cari</span>
+        <strong>@Model.Total</strong>
+        <small>Kayıtlı hesap</small>
+    </div>
+    <div class="summary-card">
+        <span>Alacak</span>
+        <strong>@CommerceManager.Web.TurkishMoney.Format(Model.Receivable)</strong>
+        <small>Size borçlu olanlar</small>
+    </div>
+    <div class="summary-card">
+        <span>Borç</span>
+        <strong>@CommerceManager.Web.TurkishMoney.Format(Model.Payable)</strong>
+        <small>Sizin borçlu olduklarınız</small>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2>Hesaplar</h2>
+            <p>@Model.Total kayıt</p>
+        </div>
+        <form method="get" action="/CurrentAccounts" class="filters">
+            <input type="text" name="search" value="@search" placeholder="Ad veya telefon..." class="filter-input" />
+            <button type="submit" class="filter-button">Ara</button>
+            @if (!string.IsNullOrWhiteSpace(search))
+            {
+                <a href="/CurrentAccounts" class="filter-clear">Temizle</a>
+            }
+        </form>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Cari</th>
+                    <th>Tip</th>
+                    <th>Telefon</th>
+                    <th>Bakiye</th>
+                    <th>Durum</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="5" class="empty">Henüz cari yok.</td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td data-label="Cari">
+                            <a href="@Url.Action("Details", "CurrentAccounts", new { id = item.Id })">
+                                <strong>@item.Name</strong>
+                            </a>
+                        </td>
+                        <td data-label="Tip">@item.KindText</td>
+                        <td data-label="Telefon">@(string.IsNullOrWhiteSpace(item.Phone) ? "—" : item.Phone)</td>
+                        <td data-label="Bakiye"><strong>@CommerceManager.Web.TurkishMoney.Format(item.Balance)</strong></td>
+                        <td data-label="Durum">@item.BalanceText</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="user-modal-backdrop" id="cariModal" aria-hidden="true">
+    <div class="user-modal" role="dialog" aria-modal="true">
+        <div class="user-modal-header">
+            <div class="user-modal-title">
+                <div class="user-modal-icon">+</div>
+                <div>
+                    <h2>Cari Ekle</h2>
+                    <p>Telefon zorunlu.</p>
+                </div>
+            </div>
+            <button type="button" class="user-modal-close" id="closeCariModal" aria-label="Kapat">×</button>
+        </div>
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div class="user-modal-body">
+                <div class="user-form-group user-form-full">
+                    <label for="cariName">Cari adı</label>
+                    <input id="cariName" name="Name" maxlength="200" required />
+                </div>
+                <div class="user-form-group user-form-full">
+                    <label for="cariKind">Tip</label>
+                    <select id="cariKind" name="Kind" required>
+                        <option value="1">Müşteri</option>
+                        <option value="2">Tedarikçi</option>
+                    </select>
+                </div>
+                <div class="user-form-group user-form-full">
+                    <label for="cariPhone">Telefon</label>
+                    <input id="cariPhone" name="Phone" maxlength="30" required />
+                </div>
+            </div>
+            <div class="user-modal-footer">
+                <button type="button" class="user-modal-cancel" id="cancelCariModal">Vazgeç</button>
+                <button type="submit" class="user-modal-submit">Cariyi Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(() => {
+    const modal = document.getElementById("cariModal");
+    const open = () => {
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+    };
+    const close = () => {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+    };
+    document.getElementById("openCariModal")?.addEventListener("click", open);
+    document.getElementById("closeCariModal")?.addEventListener("click", close);
+    document.getElementById("cancelCariModal")?.addEventListener("click", close);
+    modal?.addEventListener("click", event => {
+        if (event.target === modal) close();
+    });
+})();
+</script>
+@if (TempData["OpenModal"] as string == "cari")
+{
+    <script>document.getElementById("cariModal")?.classList.add("open");</script>
+}

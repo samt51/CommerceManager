@@ -190,7 +190,8 @@ public sealed class TrendyolProductReader(
                     imageUrl,
                     stockCode,
                     externalProductId,
-                    productMainId));
+                    productMainId,
+                    GetInt32(variant, "quantity")));
         }
     }
 

@@ -1,550 +1,87 @@
-@model CommerceManager.Web.Models.DashboardViewModel
+@model CommerceManager.Web.Models.BusinessOverviewModel
 
 @{
     ViewData["Title"] = "Dashboard";
-
-    var summary = Model.Summary;
-
-    string StatusText(string? status) => status switch
-    {
-        "Delivered" => "Teslim Edildi",
-        "Picking" => "Hazırlanıyor",
-        "Shipped" => "Kargoda",
-        "Cancelled" => "İptal",
-        "UnDelivered" => "Teslim Edilemedi",
-        "UnDeliveredAndReturned" => "Geri Döndü",
-        _ => status ?? "Bilinmiyor"
-    };
-
-    string StatusCss(string? status) => status switch
-    {
-        "Delivered" => "success",
-        "Picking" => "pending",
-        "Shipped" => "info",
-        "Cancelled" => "cancelled",
-        _ => "neutral"
-    };
-
-    var chartStep =
-        Math.Max(
-            1,
-            (int)Math.Ceiling(
-                Model.DailySales.Count / 31d));
-
-    var chartItems =
-        Model.DailySales
-            .Where((_, index) =>
-                index % chartStep == 0 ||
-                index == Model.DailySales.Count - 1)
-            .ToList();
-
-    var chartMax =
-        chartItems.Count == 0
-            ? 1m
-            : Math.Max(1m, chartItems.Max(x => x.TotalAmount));
-
-    const double chartWidth = 1000;
-    const double chartHeight = 250;
-    const double chartTop = 20;
-    const double chartBottom = 32;
-    const double chartLeft = 12;
-    const double chartRight = 12;
-
-    var plotWidth = chartWidth - chartLeft - chartRight;
-    var plotHeight = chartHeight - chartTop - chartBottom;
-
-    var chartPoints =
-        chartItems.Select((item, index) =>
-        {
-            var x =
-                chartItems.Count <= 1
-                    ? chartLeft + plotWidth / 2
-                    : chartLeft +
-                      (plotWidth * index / (chartItems.Count - 1));
-
-            var y =
-                chartTop +
-                plotHeight -
-                ((double)(item.TotalAmount / chartMax) * plotHeight);
-
-            return new
-            {
-                Item = item,
-                X = x,
-                Y = y
-            };
-        }).ToList();
-
-    var linePoints =
-        string.Join(
-            " ",
-            chartPoints.Select(x =>
-                $"{x.X.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)},{x.Y.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)}"));
-
-    var areaPoints =
-        chartPoints.Count == 0
-            ? string.Empty
-            : $"{chartLeft.ToString(System.Globalization.CultureInfo.InvariantCulture)},{(chartTop + plotHeight).ToString(System.Globalization.CultureInfo.InvariantCulture)} " +
-              linePoints +
-              $" {(chartLeft + plotWidth).ToString(System.Globalization.CultureInfo.InvariantCulture)},{(chartTop + plotHeight).ToString(System.Globalization.CultureInfo.InvariantCulture)}";
-
-    var periodSalesTotal =
-        Model.DailySales.Sum(x => x.TotalAmount);
 }
 
-<div class="dashboard-page">
-
-    <div class="dashboard-header">
-
-        <div>
-            <div class="dashboard-title-row">
-                <h1>Dashboard</h1>
-                <span class="marketplace-badge">
-                    <span class="marketplace-dot"></span>
-                    Trendyol
-                </span>
-            </div>
-
-            <p class="dashboard-subtitle">
-                Trendyol mağazanızın genel durumunu ve satış performansını
-                buradan takip edebilirsiniz.
-            </p>
-        </div>
-
-        <div class="dashboard-header-actions">
-
-            <form method="get"
-                  action="/"
-                  class="dashboard-period-form">
-
-                <label for="period">
-                    Tarih Aralığı
-                </label>
-
-                <select id="period"
-                        name="period"
-                        class="dashboard-period-select"
-                        onchange="this.form.submit()">
-
-                    <option value="this-month"
-                            selected="@(Model.SelectedPeriod == "this-month")">
-                        Bu Ay
-                    </option>
-
-                    <option value="last-30-days"
-                            selected="@(Model.SelectedPeriod == "last-30-days")">
-                        Son 30 Gün
-                    </option>
-
-                    <option value="last-3-months"
-                            selected="@(Model.SelectedPeriod == "last-3-months")">
-                        Son 3 Ay
-                    </option>
-
-                    <option value="last-6-months"
-                            selected="@(Model.SelectedPeriod == "last-6-months")">
-                        Son 6 Ay
-                    </option>
-
-                    <option value="this-year"
-                            selected="@(Model.SelectedPeriod == "this-year")">
-                        Bu Yıl
-                    </option>
-
-                    <option value="all-time"
-                            selected="@(Model.SelectedPeriod == "all-time")">
-                        Tüm Zamanlar
-                    </option>
-
-                </select>
-            </form>
-
-            <a href="/Marketplaces" class="dashboard-action">
-                Pazaryeri Yönetimi
-            </a>
-
-            <button type="button"
-                    class="dashboard-refresh"
-                    onclick="window.location.reload()">
-                ↻ Yenile
-            </button>
-        </div>
-
+<div class="page-heading">
+    <div>
+        <h1>Dashboard</h1>
+        <p>Bugünün özeti. Perakende, Trendyol ve e-ticaret ayrı durur.</p>
     </div>
+</div>
 
-    @if (!string.IsNullOrWhiteSpace(Model.ApiError))
+@if (!string.IsNullOrWhiteSpace(Model.ApiError))
+{
+    <div class="alert-error">@Model.ApiError</div>
+}
+
+<div class="summary-grid">
+    <div class="summary-card">
+        <span>Bugünkü ciro</span>
+        <strong>@TurkishMoney.Format(Model.TotalRevenue)</strong>
+        <small>@Model.TotalSales satış</small>
+    </div>
+    <div class="summary-card">
+        <span>Kasa</span>
+        <strong>@TurkishMoney.Format(Model.CashBalance)</strong>
+        <small>Bugünkü gider @TurkishMoney.Format(Model.TodayExpenses)</small>
+    </div>
+    <div class="summary-card">
+        <span>Eldeki stok</span>
+        <strong>@Model.OnHandQuantity</strong>
+        <small>@Model.OutOfStockProducts ürün tükendi</small>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2>Kanallar</h2>
+            <p>Trendyol tutarı sipariş servisinden anlık. E-ticaret site bağlanınca aynı şekilde gelecek.</p>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Kanal</th>
+                    <th>Satış</th>
+                    <th>Ciro</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><strong>Perakende</strong></td>
+                    <td>@Model.RetailSales</td>
+                    <td>@TurkishMoney.Format(Model.RetailRevenue)</td>
+                </tr>
+                <tr>
+                    <td><strong>Trendyol</strong></td>
+                    <td>@Model.TrendyolOrders</td>
+                    <td>@TurkishMoney.Format(Model.TrendyolRevenue)</td>
+                </tr>
+                <tr>
+                    <td><strong>E-ticaret</strong></td>
+                    <td>@Model.WebsiteOrders</td>
+                    <td>@TurkishMoney.Format(Model.WebsiteRevenue)</td>
+                </tr>
+                <tr>
+                    <td><strong>Toplam</strong></td>
+                    <td><strong>@Model.TotalSales</strong></td>
+                    <td><strong>@TurkishMoney.Format(Model.TotalRevenue)</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    @if (Model.TrendyolFinanceAvailable)
     {
-        <div class="dashboard-alert">
-            <strong>Dashboard verileri alınamadı.</strong>
-            <span>@Model.ApiError</span>
-        </div>
+        <p class="panel-note">
+            Bugün verilen Trendyol siparişlerinin finans kaydı:
+            komisyon @TurkishMoney.Format(Model.TrendyolCommission),
+            indirim @TurkishMoney.Format(Model.TrendyolDiscount),
+            satıcı tutarı @TurkishMoney.Format(Model.TrendyolSellerRevenue).
+            Üstteki ciro paket tutarıdır.
+        </p>
     }
-
-    <section class="dashboard-kpi-grid">
-
-        <div class="dashboard-kpi-card primary">
-            <div class="dashboard-kpi-top">
-                <span class="dashboard-kpi-label">Net Satış</span>
-                <span class="dashboard-kpi-icon">₺</span>
-            </div>
-
-            <strong class="dashboard-kpi-value">
-                @summary.NetSales.ToString("N2") ₺
-            </strong>
-
-            <div class="dashboard-kpi-footer">
-                <span>Brüt satış</span>
-                <strong>
-                    @summary.GrossSales.ToString("N2") ₺
-                </strong>
-            </div>
-        </div>
-
-        <div class="dashboard-kpi-card">
-            <div class="dashboard-kpi-top">
-                <span class="dashboard-kpi-label">Siparişler</span>
-                <span class="dashboard-kpi-icon">▣</span>
-            </div>
-
-            <strong class="dashboard-kpi-value">
-                @summary.TotalOrders.ToString("N0")
-            </strong>
-
-            <div class="dashboard-kpi-footer">
-                <span>Hazırlanıyor</span>
-                <strong>
-                    @summary.PreparingOrderCount
-                </strong>
-            </div>
-        </div>
-
-        <div class="dashboard-kpi-card">
-            <div class="dashboard-kpi-top">
-                <span class="dashboard-kpi-label">Ürünler</span>
-                <span class="dashboard-kpi-icon">▦</span>
-            </div>
-
-            <strong class="dashboard-kpi-value">
-                @summary.TotalProducts.ToString("N0")
-            </strong>
-
-            <div class="dashboard-kpi-footer">
-                <span>Katalogdaki ürün</span>
-                <strong>Trendyol</strong>
-            </div>
-        </div>
-
-        <div class="dashboard-kpi-card">
-            <div class="dashboard-kpi-top">
-                <span class="dashboard-kpi-label">Toplam Stok</span>
-                <span class="dashboard-kpi-icon">▤</span>
-            </div>
-
-            <strong class="dashboard-kpi-value">
-                @summary.TotalStockQuantity.ToString("N0")
-            </strong>
-
-            <div class="dashboard-kpi-footer">
-                <span>Kanal stoğu</span>
-                <a href="/Stocks">Stokları Gör</a>
-            </div>
-        </div>
-
-    </section>
-
-    <section class="dashboard-main-grid">
-
-        <div class="dashboard-card sales-card">
-
-            <div class="dashboard-card-header">
-
-                <div>
-                    <h2>Satış Performansı</h2>
-                    <p>Seçili dönemin satış hareketi</p>
-                </div>
-
-                <div class="dashboard-card-total">
-                    <strong>
-                        @periodSalesTotal.ToString("N2") ₺
-                    </strong>
-
-                    <span>Seçili dönem satışı</span>
-                </div>
-
-            </div>
-
-            <div class="sales-trend">
-
-                @if (chartPoints.Count == 0)
-                {
-                    <div class="sales-trend-empty">
-                        Bu dönem için satış verisi bulunamadı.
-                    </div>
-                }
-                else
-                {
-                    <svg class="sales-trend-svg"
-                         viewBox="0 0 1000 250"
-                         preserveAspectRatio="none"
-                         role="img"
-                         aria-label="Satış performansı grafiği">
-
-                        <defs>
-                            <linearGradient id="salesAreaGradient"
-                                            x1="0"
-                                            y1="0"
-                                            x2="0"
-                                            y2="1">
-                                <stop offset="0%"
-                                      stop-color="#0f8f62"
-                                      stop-opacity=".24" />
-                                <stop offset="100%"
-                                      stop-color="#0f8f62"
-                                      stop-opacity=".02" />
-                            </linearGradient>
-                        </defs>
-
-                        <line x1="12" y1="69.5"
-                              x2="988" y2="69.5"
-                              class="sales-grid-line" />
-
-                        <line x1="12" y1="119"
-                              x2="988" y2="119"
-                              class="sales-grid-line" />
-
-                        <line x1="12" y1="168.5"
-                              x2="988" y2="168.5"
-                              class="sales-grid-line" />
-
-                        <line x1="12" y1="218"
-                              x2="988" y2="218"
-                              class="sales-grid-line" />
-
-                        <polygon points="@areaPoints"
-                                 class="sales-area" />
-
-                        <polyline points="@linePoints"
-                                  class="sales-line" />
-
-                        @foreach (var point in chartPoints)
-                        {
-                            <circle
-                                cx="@point.X.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
-                                cy="@point.Y.ToString("0.##", System.Globalization.CultureInfo.InvariantCulture)"
-                                r="5"
-                                class="sales-point">
-                                <title>@point.Item.Date.ToString("dd.MM.yyyy") • @point.Item.OrderCount sipariş • @point.Item.TotalAmount.ToString("N2") ₺</title>
-                            </circle>
-                        }
-
-                    </svg>
-
-                    <div class="sales-trend-labels">
-                        @{
-                            var labelIndexes = new[]
-                            {
-                                0,
-                                chartPoints.Count / 4,
-                                chartPoints.Count / 2,
-                                chartPoints.Count * 3 / 4,
-                                chartPoints.Count - 1
-                            }
-                            .Distinct()
-                            .OrderBy(x => x)
-                            .ToList();
-                        }
-
-                        @foreach (var index in labelIndexes)
-                        {
-                            <span>
-                                @chartPoints[index].Item.Date.ToString("dd MMM")
-                            </span>
-                        }
-                    </div>
-                }
-
-            </div>
-
-        </div>
-
-        <div class="dashboard-card status-card">
-
-            <div class="dashboard-card-header">
-                <div>
-                    <h2>Sipariş Durumları</h2>
-                    <p>Mevcut sipariş dağılımı</p>
-                </div>
-            </div>
-
-            <div class="status-list">
-
-                @foreach (var item in Model.OrderStatuses)
-                {
-                    var percentage =
-                        summary.TotalOrders > 0
-                            ? Math.Round(
-                                (decimal)item.Count /
-                                summary.TotalOrders * 100,
-                                1)
-                            : 0;
-
-                    <div class="status-row">
-
-                        <div class="status-row-top">
-
-                            <span class="status-name">
-                                <span class="status-indicator @StatusCss(item.Status)"></span>
-                                @StatusText(item.Status)
-                            </span>
-
-                            <strong>@item.Count</strong>
-
-                        </div>
-
-                        <div class="status-progress">
-                            <div class="status-progress-value @StatusCss(item.Status)"
-                                 style="width:@percentage.ToString(System.Globalization.CultureInfo.InvariantCulture)%">
-                            </div>
-                        </div>
-
-                    </div>
-                }
-
-            </div>
-
-        </div>
-
-    </section>
-
-    <section class="dashboard-bottom-grid">
-
-        <div class="dashboard-card orders-card">
-
-            <div class="dashboard-card-header">
-
-                <div>
-                    <h2>Son Siparişler</h2>
-                    <p>Trendyol'dan alınan son siparişler</p>
-                </div>
-
-                <a href="/Orders" class="dashboard-card-link">
-                    Tümünü Gör →
-                </a>
-
-            </div>
-
-            <div class="dashboard-table-wrapper">
-
-                <table class="dashboard-table">
-
-                    <thead>
-                        <tr>
-                            <th>Sipariş No</th>
-                            <th>Tarih</th>
-                            <th>Ürün</th>
-                            <th>Durum</th>
-                            <th class="text-right">Tutar</th>
-                        </tr>
-                    </thead>
-
-                    <tbody>
-
-                    @foreach (var order in Model.RecentOrders)
-                    {
-                        <tr>
-
-                            <td>
-                                <a href="/Orders/Details/@order.Id"
-                                   class="dashboard-order-number">
-                                    #@order.OrderNumber
-                                </a>
-                            </td>
-
-                            <td>
-                                <span class="dashboard-date">
-                                    @(order.OrderedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm"))
-                                </span>
-                            </td>
-
-                            <td>
-                                @order.ItemCount ürün
-                            </td>
-
-                            <td>
-                                <span class="dashboard-status @StatusCss(order.Status)">
-                                    @StatusText(order.Status)
-                                </span>
-                            </td>
-
-                            <td class="text-right">
-                                <strong>
-                                    @order.TotalAmount.ToString("N2") ₺
-                                </strong>
-                            </td>
-
-                        </tr>
-                    }
-
-                    </tbody>
-
-                </table>
-
-            </div>
-
-        </div>
-
-        <div class="dashboard-card returns-card">
-
-            <div class="dashboard-card-header">
-
-                <div>
-                    <h2>İadeler</h2>
-                    <p>Kabul edilen iadeler</p>
-                </div>
-
-                <span class="return-icon">↩</span>
-
-            </div>
-
-            <div class="return-main">
-
-                <strong>
-                    @summary.AcceptedReturnCount
-                </strong>
-
-                <span>
-                    kabul edilen iade
-                </span>
-
-            </div>
-
-            <div class="return-amount">
-
-                <span>İade tutarı</span>
-
-                <strong>
-                    @summary.AcceptedReturnAmount.ToString("N2") ₺
-                </strong>
-
-            </div>
-
-            <div class="return-net">
-
-                <div>
-                    <span>Net satış</span>
-                    <strong>
-                        @summary.NetSales.ToString("N2") ₺
-                    </strong>
-                </div>
-
-                <a href="/Returns">
-                    İadeleri Gör →
-                </a>
-
-            </div>
-
-        </div>
-
-    </section>
-
 </div>

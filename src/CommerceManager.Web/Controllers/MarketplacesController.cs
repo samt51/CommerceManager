@@ -51,7 +51,8 @@ public sealed class MarketplacesController(
                 $"{result.Received} alındı, " +
                 $"{result.Inserted} eklendi, " +
                 $"{result.Updated} güncellendi, " +
-                $"{result.Unchanged} değişmedi.",
+                $"{result.Unchanged} değişmedi, " +
+                $"{result.CatalogInserted} genel stoka eklendi.",
             cancellationToken);
     }
 

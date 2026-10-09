@@ -1,5 +1,6 @@
 using CommerceManager.Application.Integrations.Trendyol;
 using CommerceManager.Domain.Orders;
+using CommerceManager.Infrastructure.Catalog;
 using CommerceManager.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
@@ -10,6 +11,7 @@ namespace CommerceManager.Infrastructure.Integrations.Trendyol;
 public sealed class TrendyolPackageStore(
     AppDbContext db,
     ITrendyolProductReader productReader,
+    CatalogStockApplier catalogStock,
     ILogger<TrendyolPackageStore> logger)
     : ITrendyolPackageStore
 {
@@ -115,7 +117,20 @@ public sealed class TrendyolPackageStore(
                     }
                     else
                     {
-                        stock.Decrease(line.Quantity);
+                        var drop = Math.Min(stock.Quantity, line.Quantity);
+                        if (drop < line.Quantity)
+                        {
+                            logger.LogWarning(
+                                "Trendyol kanal stoğu sipariş adedinden az. Barkod {Barcode}, elde {OnHand}, sipariş {Ordered}. Kalan sıfırlandı, sipariş yine kaydedildi.",
+                                line.Barcode,
+                                stock.Quantity,
+                                line.Quantity);
+                        }
+
+                        if (drop > 0)
+                            stock.Decrease(drop);
+                        else
+                            stock.SetQuantity(0);
 
                         db.StockMovements.Add(
                             StockMovement.Create(
@@ -126,6 +141,23 @@ public sealed class TrendyolPackageStore(
                                 referenceType,
                                 referenceId));
                     }
+                }
+
+                var catalogApplied = await catalogStock.TryApplyAsync(
+                    SalesChannel.Trendyol,
+                    line.Barcode,
+                    line.Quantity,
+                    StockMovementType.Sale,
+                    referenceType,
+                    referenceId,
+                    cancellationToken);
+
+                if (!catalogApplied)
+                {
+                    logger.LogWarning(
+                        "Genel stok ürünü bulunamadı. Barkod {Barcode} eşleşmediği için sipariş {OrderId} genel stoktan düşülmedi.",
+                        line.Barcode,
+                        package.PackageId);
                 }
             }
 

@@ -6,7 +6,8 @@ public sealed record TrendyolProductSnapshot(
     string? ImageUrl,
     string? StockCode = null,
     string? ExternalProductId = null,
-    string? ProductMainId = null);
+    string? ProductMainId = null,
+    int Quantity = 0);
 
 public sealed record TrendyolProductPage(
     int Page,

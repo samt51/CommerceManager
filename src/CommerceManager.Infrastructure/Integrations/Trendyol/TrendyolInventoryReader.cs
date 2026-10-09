@@ -217,10 +217,27 @@ public sealed class TrendyolInventoryReader(
                     new TrendyolInventorySnapshot(
                         barcode,
                         quantity,
-                        stockCode));
+                        stockCode,
+                        ReadMoney(variant, "salePrice") ?? ReadMoney(product, "salePrice"),
+                        ReadMoney(variant, "listPrice") ?? ReadMoney(product, "listPrice")));
             }
         }
 
         return result;
+    }
+
+    private static decimal? ReadMoney(JsonElement element, string name)
+    {
+        if (!element.TryGetProperty(name, out var value))
+            return null;
+
+        if (value.ValueKind == JsonValueKind.Number)
+            return value.GetDecimal();
+
+        if (value.ValueKind == JsonValueKind.String &&
+            decimal.TryParse(value.GetString(), out var parsed))
+            return parsed;
+
+        return null;
     }
 }

@@ -1,4 +1,5 @@
 using CommerceManager.Application.Integrations.Trendyol;
+using CommerceManager.Domain.Catalog;
 using CommerceManager.Domain.Orders;
 using CommerceManager.Domain.Products;
 using CommerceManager.Infrastructure.Persistence;
@@ -21,6 +22,7 @@ public sealed class TrendyolProductStore(
         var inserted = 0;
         var updated = 0;
         var unchanged = 0;
+        var catalogInserted = 0;
 
         var seenBarcodes =
             new HashSet<string>(StringComparer.Ordinal);
@@ -68,24 +70,31 @@ public sealed class TrendyolProductStore(
 
                     db.Products.Add(product);
                     inserted++;
-
-                    continue;
                 }
-
-                if (IsSame(product, item, name))
+                else if (IsSame(product, item, name))
                 {
                     unchanged++;
-                    continue;
+                }
+                else
+                {
+                    product.Update(
+                        name,
+                        item.StockCode,
+                        item.ExternalProductId,
+                        item.ProductMainId,
+                        item.ImageUrl);
+
+                    updated++;
                 }
 
-                product.Update(
-                    name,
-                    item.StockCode,
-                    item.ExternalProductId,
-                    item.ProductMainId,
-                    item.ImageUrl);
-
-                updated++;
+                if (await AddCatalogProductAsync(
+                        item.Barcode,
+                        name,
+                        item.Quantity,
+                        cancellationToken))
+                {
+                    catalogInserted++;
+                }
             }
 
             await db.SaveChangesAsync(cancellationToken);
@@ -105,7 +114,54 @@ public sealed class TrendyolProductStore(
             received,
             inserted,
             updated,
-            unchanged);
+            unchanged,
+            catalogInserted);
+    }
+
+    private async Task<bool> AddCatalogProductAsync(
+        string barcode,
+        string name,
+        int quantity,
+        CancellationToken cancellationToken)
+    {
+        var normalized = barcode.Trim();
+
+        var exists = await db.CatalogBarcodes.AnyAsync(
+            x =>
+                x.Channel == SalesChannel.Trendyol &&
+                x.Barcode == normalized,
+            cancellationToken);
+
+        if (exists)
+            return false;
+
+        var catalogName = string.IsNullOrWhiteSpace(name)
+            ? normalized
+            : name.Trim();
+
+        if (catalogName.Length > 300)
+            catalogName = catalogName[..300];
+
+        var onHand = Math.Max(quantity, 0);
+        var catalogProduct = CatalogProduct.Create(catalogName, onHand);
+
+        db.CatalogProducts.Add(catalogProduct);
+        db.CatalogBarcodes.Add(
+            CatalogBarcode.Create(
+                catalogProduct.Id,
+                SalesChannel.Trendyol,
+                normalized));
+
+        if (onHand > 0)
+        {
+            db.CatalogChannelAllocations.Add(
+                CatalogChannelAllocation.Create(
+                    catalogProduct.Id,
+                    SalesChannel.Trendyol,
+                    onHand));
+        }
+
+        return true;
     }
 
     private static bool IsSame(

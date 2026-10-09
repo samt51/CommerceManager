@@ -1,0 +1,271 @@
+@model CommerceManager.Web.Models.RetailSalePage
+
+@{
+    ViewData["Title"] = "Satış";
+    string? search = ViewBag.Search as string;
+    var totalAmount = Model.Items.Sum(x => x.TotalAmount);
+}
+
+<div class="page-heading">
+    <div>
+        <h1>Satışlar</h1>
+        <p>Perakende satışlar. Müşteri bilgisi isteğe bağlıdır.</p>
+    </div>
+    <button type="button" class="users-primary-button" id="openSaleModal">
+        <span>＋</span>
+        Satış Ekle
+    </button>
+</div>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="profile-alert profile-alert-success"><span>✓</span> @success</div>
+}
+@if (TempData["SaleError"] is string error)
+{
+    <div class="alert-error">@error</div>
+}
+@if (ViewBag.ApiError is not null)
+{
+    <div class="alert-error">@ViewBag.ApiError</div>
+}
+
+<div class="summary-grid">
+    <div class="summary-card">
+        <span>Satış</span>
+        <strong>@Model.Items.Count</strong>
+        <small>Listelenen kayıt</small>
+    </div>
+    <div class="summary-card">
+        <span>Tutar</span>
+        <strong>@TurkishMoney.Format(totalAmount)</strong>
+        <small>Perakende ciro</small>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2>Satış listesi</h2>
+            <p>@Model.Items.Count kayıt bulundu</p>
+        </div>
+        <form method="get" action="/Sales" class="filters">
+            <input type="text" name="search" value="@search" class="filter-input" placeholder="Ürün, müşteri veya telefon..." />
+            <button type="submit" class="filter-button">Ara</button>
+            @if (!string.IsNullOrWhiteSpace(search))
+            {
+                <a href="/Sales" class="filter-clear">Temizle</a>
+            }
+        </form>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Tarih</th>
+                    <th>Ürün</th>
+                    <th>Müşteri</th>
+                    <th>Telefon</th>
+                    <th>Adet</th>
+                    <th>Birim fiyat</th>
+                    <th>Toplam</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr><td colspan="7" class="empty">Henüz perakende satış yok.</td></tr>
+            }
+            else
+            {
+                foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.OccurredAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                        <td><strong>@item.ProductName</strong></td>
+                        <td>@(string.IsNullOrWhiteSpace(item.CustomerName) ? "Perakende" : item.CustomerName)</td>
+                        <td>@(string.IsNullOrWhiteSpace(item.CustomerPhone) ? "—" : item.CustomerPhone)</td>
+                        <td>@item.Quantity</td>
+                        <td>@TurkishMoney.Format(item.UnitPrice)</td>
+                        <td><strong>@TurkishMoney.Format(item.TotalAmount)</strong></td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="user-modal-backdrop" id="saleModal" aria-hidden="true">
+    <div class="user-modal sale-modal" role="dialog" aria-modal="true">
+        <div class="user-modal-header">
+            <div class="user-modal-title">
+                <div class="user-modal-icon">+</div>
+                <div>
+                    <h2>Satış Ekle</h2>
+                    <p>Ürünü arayıp seçin. Müşteri adı ve telefon zorunlu değil.</p>
+                </div>
+            </div>
+            <button type="button" class="user-modal-close" id="closeSaleModal" aria-label="Kapat">×</button>
+        </div>
+        <form asp-action="Create" method="post" id="saleForm">
+            @Html.AntiForgeryToken()
+            <input type="hidden" name="CatalogProductId" id="saleProductId" />
+            <div class="user-modal-body">
+                <div class="user-form-group user-form-full">
+                    <label for="productSearch">Ürün</label>
+                    <input id="productSearch" type="text" placeholder="Ad veya barkod yazın..." />
+                    <div class="sale-product-list" id="productList">
+                        @foreach (var product in Model.Products)
+                        {
+                            var barcode = product.TrendyolBarcode ?? product.WebsiteBarcode ?? "";
+                            <button type="button"
+                                    class="sale-product-item"
+                                    data-id="@product.Id"
+                                    data-name="@product.Name"
+                                    data-barcode="@barcode"
+                                    data-retail="@product.RetailQuantity"
+                                    data-price="@product.SalePrice.ToString(System.Globalization.CultureInfo.InvariantCulture)">
+                                <strong>@product.Name</strong>
+                                <span>Perakende @product.RetailQuantity@(string.IsNullOrWhiteSpace(barcode) ? "" : $" · {barcode}")</span>
+                            </button>
+                        }
+                    </div>
+                    <small id="selectedProduct">Henüz ürün seçilmedi.</small>
+                </div>
+                <div class="user-form-grid">
+                    <div class="user-form-group">
+                        <label for="saleQuantity">Adet</label>
+                        <input id="saleQuantity" name="Quantity" type="number" min="1" value="1" required />
+                    </div>
+                    <div class="user-form-group">
+                        <label for="salePrice">Birim fiyat</label>
+                        <input id="salePrice" name="UnitPriceText" inputmode="decimal" placeholder="199,90" required />
+                    </div>
+                    <div class="user-form-group">
+                        <label for="customerName">Müşteri adı</label>
+                        <input id="customerName" name="CustomerName" maxlength="200" placeholder="İsteğe bağlı" />
+                    </div>
+                    <div class="user-form-group">
+                        <label for="customerPhone">Telefon</label>
+                        <input id="customerPhone" name="CustomerPhone" maxlength="30" placeholder="İsteğe bağlı" />
+                    </div>
+                </div>
+                <div class="user-modal-note">
+                    <strong id="saleTotal">0,00 ₺</strong>
+                    <span>Perakende stoktan düşer, tutar kasaya girer.</span>
+                </div>
+            </div>
+            <div class="user-modal-footer">
+                <button type="button" class="user-modal-cancel" id="cancelSaleModal">Vazgeç</button>
+                <button type="submit" class="user-modal-submit">Satışı Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(() => {
+    const modal = document.getElementById("saleModal");
+    const list = document.getElementById("productList");
+    const search = document.getElementById("productSearch");
+    const productId = document.getElementById("saleProductId");
+    const selected = document.getElementById("selectedProduct");
+    const quantity = document.getElementById("saleQuantity");
+    const price = document.getElementById("salePrice");
+    const total = document.getElementById("saleTotal");
+
+    const parseMoney = text => {
+        if (!text) return 0;
+        const digits = text.replace(/[^\d,]/g, "");
+        if (!digits) return 0;
+        const number = Number(digits.replace(/\./g, "").replace(",", "."));
+        return Number.isFinite(number) ? number : 0;
+    };
+    const format = number => new Intl.NumberFormat("tr-TR", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+        useGrouping: false
+    }).format(number);
+
+    const refreshTotal = () => {
+        total.textContent = format(parseMoney(price.value) * (Number(quantity.value) || 0)) + " ₺";
+    };
+
+    const matches = item => {
+        const words = search.value.trim().toLocaleLowerCase("tr").split(/\s+/).filter(Boolean);
+        if (words.length === 0) return true;
+        const haystack = ((item.dataset.name || "") + " " + (item.dataset.barcode || "")).toLocaleLowerCase("tr");
+        return words.every(word => haystack.includes(word));
+    };
+
+    const filterProducts = () => {
+        let visible = 0;
+        list.querySelectorAll(".sale-product-item").forEach(item => {
+            const show = matches(item);
+            item.classList.toggle("is-hidden", !show);
+            if (show) visible++;
+        });
+        let empty = document.getElementById("productSearchEmpty");
+        if (!empty) {
+            empty = document.createElement("p");
+            empty.id = "productSearchEmpty";
+            empty.className = "sale-product-empty";
+            list.appendChild(empty);
+        }
+        empty.textContent = "Eşleşen ürün yok.";
+        empty.hidden = visible > 0;
+    };
+
+    search?.addEventListener("input", filterProducts);
+
+    list?.addEventListener("click", event => {
+        const item = event.target.closest(".sale-product-item");
+        if (!item) return;
+        list.querySelectorAll(".sale-product-item").forEach(x => x.classList.remove("selected"));
+        item.classList.add("selected");
+        productId.value = item.dataset.id;
+        selected.textContent = item.dataset.name + " · perakende " + item.dataset.retail;
+        const unit = Number(item.dataset.price || 0);
+        if (unit > 0) {
+            price.value = format(unit);
+            refreshTotal();
+        }
+    });
+
+    price?.addEventListener("blur", () => {
+        const number = parseMoney(price.value);
+        if (number > 0) price.value = format(number);
+        refreshTotal();
+    });
+    quantity?.addEventListener("input", refreshTotal);
+    price?.addEventListener("input", refreshTotal);
+
+    document.getElementById("saleForm")?.addEventListener("submit", event => {
+        if (!productId.value) {
+            event.preventDefault();
+            selected.textContent = "Satış için listeden bir ürün seçin.";
+        }
+    });
+
+    const open = () => {
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+        search?.focus();
+    };
+    const close = () => {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+    };
+    document.getElementById("openSaleModal")?.addEventListener("click", open);
+    document.getElementById("closeSaleModal")?.addEventListener("click", close);
+    document.getElementById("cancelSaleModal")?.addEventListener("click", close);
+    modal?.addEventListener("click", event => {
+        if (event.target === modal) close();
+    });
+})();
+</script>
+@if (TempData["OpenModal"] as string == "sale")
+{
+    <script>document.getElementById("saleModal")?.classList.add("open");</script>
+}

@@ -17,6 +17,9 @@
     var currentController =
         ViewContext.RouteData.Values["controller"]?.ToString();
 
+    var currentAction =
+        ViewContext.RouteData.Values["action"]?.ToString();
+
     var fullName =
         User.FindFirst("full_name")?.Value
         ?? User.Identity?.Name
@@ -52,61 +55,94 @@
 
         <nav class="nav">
 
-            <a href="/">
-                <span class="nav-icon">⌂</span>
-                Dashboard
-            </a>
-
-            <a href="/Products"
-               class="@(currentController == "Products" ? "active" : null)">
-                <span class="nav-icon">▦</span>
-                Ürünler
-            </a>
-
-            <a href="/Orders" class="@(currentController == "Orders" ? "active" : null)">
-                <span class="nav-icon">▣</span>
-                Siparişler
-            </a>
-
-            <a href="/Returns"
-               class="@(currentController == "Returns" ? "active" : null)">
-                <span class="nav-icon">↩</span>
-                İadeler
-            </a>
-
-            <a href="/Stocks"
-               class="@(currentController == "Stocks" ? "active" : null)">
-                <span class="nav-icon">▤</span>
-                Stok Yönetimi
-            </a>
-
-            <a href="/Marketplaces"
-               class="@(currentController == "Marketplaces" ? "active" : null)">
-                <span class="nav-icon">◉</span>
-                Pazaryerleri
-            </a>
-
-            <a href="#">
-                <span class="nav-icon">▥</span>
-                Raporlar
-            </a>
-
-            <div class="nav-separator"></div>
-
-            @if (User.IsInRole("Admin"))
-            {
-                <a asp-controller="Users"
-                   asp-action="Index"
-                   class="@(currentController == "Users" ? "active" : null)">
-                    <span class="nav-icon">♙</span>
-                    Kullanıcılar
+            <div class="nav-group">
+                <a href="/">
+                    <span class="nav-icon">⌂</span>
+                    Dashboard
                 </a>
-            }
+            </div>
 
-            <a href="#">
-                <span class="nav-icon">⚙</span>
-                Ayarlar
-            </a>
+            <div class="nav-group">
+                <span class="nav-group-label">Ürün ve stok</span>
+                <a href="/Products"
+                   class="@(currentController == "Products" && currentAction == "Index" ? "active" : null)">
+                    <span class="nav-icon">▦</span>
+                    Ürünler
+                </a>
+                <a href="/Catalog"
+                   class="@(currentController == "Catalog" ? "active" : null)">
+                    <span class="nav-icon">◇</span>
+                    Genel Stok
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <span class="nav-group-label">Satış</span>
+                <a href="/Sales"
+                   class="@(currentController == "Sales" ? "active" : null)">
+                    <span class="nav-icon">＋</span>
+                    Perakende
+                </a>
+                <a href="/Orders" class="@(currentController == "Orders" ? "active" : null)">
+                    <span class="nav-icon">▣</span>
+                    Siparişler
+                </a>
+                <a href="/Returns"
+                   class="@(currentController == "Returns" ? "active" : null)">
+                    <span class="nav-icon">↩</span>
+                    İadeler
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <span class="nav-group-label">Finans</span>
+                <a href="/Cash"
+                   class="@(currentController == "Cash" ? "active" : null)">
+                    <span class="nav-icon">◎</span>
+                    Kasa
+                </a>
+                <a href="/CurrentAccounts"
+                   class="@(currentController == "CurrentAccounts" ? "active" : null)">
+                    <span class="nav-icon">₺</span>
+                    Cari
+                </a>
+                <a href="/Expenses"
+                   class="@(currentController == "Expenses" ? "active" : null)">
+                    <span class="nav-icon">−</span>
+                    Giderler
+                </a>
+            </div>
+
+            <div class="nav-group">
+                <span class="nav-group-label">Sistem</span>
+                <a href="/Marketplaces"
+                   class="@(currentController == "Marketplaces" ? "active" : null)">
+                    <span class="nav-icon">◉</span>
+                    Pazaryerleri
+                </a>
+                <a href="/Products/Trendyol"
+                   class="@(currentController == "Products" && currentAction is "Trendyol" or "Details" ? "active" : null)">
+                    <span class="nav-icon">▦</span>
+                    Trendyol Ürünleri
+                </a>
+                <a href="#">
+                    <span class="nav-icon">▥</span>
+                    Raporlar
+                </a>
+                @if (User.IsInRole("Admin"))
+                {
+                    <a asp-controller="Users"
+                       asp-action="Index"
+                       class="@(currentController == "Users" ? "active" : null)">
+                        <span class="nav-icon">♙</span>
+                        Kullanıcılar
+                    </a>
+                }
+                <a href="#">
+                    <span class="nav-icon">⚙</span>
+                    Ayarlar
+                </a>
+            </div>
 
         </nav>
 

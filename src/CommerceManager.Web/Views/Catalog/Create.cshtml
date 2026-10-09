@@ -1,0 +1,78 @@
+@model CommerceManager.Web.Models.CreateCatalogProductViewModel
+
+@{
+    ViewData["Title"] = "Ürün Ekle";
+}
+
+<div class="page-heading">
+    <div>
+        <h1>Ürün Ekle</h1>
+        <p>Her varyant ayrı kart olur. Trendyol barkodu ile site barkodu farklı olabilir; sipariş hangi barkodla gelirse o kartın stoğu değişir.</p>
+    </div>
+
+    <a asp-controller="Catalog"
+       asp-action="Index"
+       class="profile-secondary-button">
+        ← Genel Stoka Dön
+    </a>
+</div>
+
+<div class="profile-form-card catalog-create-card">
+    <div class="profile-card-header">
+        <h2>Genel stok kartı</h2>
+        <p>Başlangıç adedini girin. Barkodları şimdi bağlayabilir veya sonra boş bırakabilirsiniz.</p>
+    </div>
+
+    <form asp-controller="Catalog" asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+
+        <div asp-validation-summary="ModelOnly" class="profile-validation"></div>
+
+        <div class="profile-field">
+            <label asp-for="Name"></label>
+            <input asp-for="Name" class="profile-input" />
+            <span asp-validation-for="Name"></span>
+        </div>
+
+        <div class="profile-field">
+            <label asp-for="Quantity"></label>
+            <input asp-for="Quantity" class="profile-input" type="number" min="0" />
+            <span asp-validation-for="Quantity"></span>
+            <small>Şu an depodaki adet.</small>
+        </div>
+
+        <div class="profile-field">
+            <label asp-for="TrendyolBarcode"></label>
+            <input asp-for="TrendyolBarcode" class="profile-input" />
+            <span asp-validation-for="TrendyolBarcode"></span>
+            <small>Trendyol sipariş satırındaki barkod.</small>
+        </div>
+
+        <div class="profile-field">
+            <label asp-for="WebsiteBarcode"></label>
+            <input asp-for="WebsiteBarcode" class="profile-input" />
+            <span asp-validation-for="WebsiteBarcode"></span>
+            <small>T-Soft ürün sayfasındaki barkod. Örnek: 00260.</small>
+        </div>
+
+        <div class="profile-field">
+            <label asp-for="TrendyolAllocation"></label>
+            <input asp-for="TrendyolAllocation" class="profile-input" type="number" min="0" />
+            <span asp-validation-for="TrendyolAllocation"></span>
+            <small>Trendyol’a ayırdığınız adet. Boş bırakılırsa 0 sayılır.</small>
+        </div>
+
+        <div class="profile-field">
+            <label asp-for="WebsiteAllocation"></label>
+            <input asp-for="WebsiteAllocation" class="profile-input" type="number" min="0" />
+            <span asp-validation-for="WebsiteAllocation"></span>
+            <small>Siteye ayırdığınız adet. Perakende, genel stoktan bu paylar düşünce kalan adettir.</small>
+        </div>
+
+        <div class="profile-actions">
+            <button type="submit" class="profile-primary-button">
+                Ürünü Kaydet
+            </button>
+        </div>
+    </form>
+</div>

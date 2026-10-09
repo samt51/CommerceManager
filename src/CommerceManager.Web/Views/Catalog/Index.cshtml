@@ -1,0 +1,260 @@
+@model CommerceManager.Web.Models.CatalogProductPage
+
+@{
+    ViewData["Title"] = "Genel Stok";
+
+    string? search = ViewBag.Search as string;
+
+    var totalPages = Model.Size > 0
+        ? (int)Math.Ceiling(Model.Total / (double)Model.Size)
+        : 0;
+}
+
+<div class="page-heading">
+    <div>
+        <h1>Genel Stok</h1>
+        <p>Her varyant ayrı üründür. Trendyol ve site siparişleri barkodla bu stoktan düşer, iade barkodla geri eklenir.</p>
+    </div>
+
+    <button type="button" class="users-primary-button" id="openProductModal">
+        <span>＋</span>
+        Ürün Ekle
+    </button>
+</div>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="profile-alert profile-alert-success">
+        <span>✓</span>
+        @success
+    </div>
+}
+
+@if (TempData["ProductError"] is string productError)
+{
+    <div class="alert-error">@productError</div>
+}
+@if (ViewBag.ApiError is not null)
+{
+    <div class="alert-error">
+        @ViewBag.ApiError
+    </div>
+}
+
+<div class="summary-grid">
+    <div class="summary-card">
+        <span>Toplam Ürün</span>
+        <strong>@Model.Total</strong>
+        <small>Genel stok kartı</small>
+    </div>
+
+    <div class="summary-card">
+        <span>Toplam Adet</span>
+        <strong>@Model.TotalQuantity</strong>
+        <small>Eldeki stok</small>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2>Ürünler</h2>
+            <p>@Model.Total kayıt bulundu</p>
+        </div>
+
+        <form method="get" action="/Catalog" class="filters">
+            <input type="text"
+                   name="search"
+                   value="@search"
+                   placeholder="Ürün adı veya barkod..."
+                   class="filter-input" />
+
+            <input type="hidden" name="size" value="@Model.Size" />
+
+            <button type="submit" class="filter-button">Ara</button>
+
+            @if (!string.IsNullOrWhiteSpace(search))
+            {
+                <a href="/Catalog" class="filter-clear">Temizle</a>
+            }
+        </form>
+    </div>
+
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Ürün</th>
+                    <th>Stok</th>
+                    <th>Kanal payı</th>
+                    <th>Perakende</th>
+                    <th>Durum</th>
+                    <th>Trendyol barkodu</th>
+                    <th>Site barkodu</th>
+                    <th>Eklenme</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr>
+                    <td colspan="8" class="empty">
+                        Henüz genel stok ürünü yok.
+                    </td>
+                </tr>
+            }
+            else
+            {
+                foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td data-label="Ürün">
+                            <strong>@item.Name</strong>
+                        </td>
+                        <td data-label="Stok">
+                            <strong class="stock-quantity">@item.Quantity</strong>
+                        </td>
+                        <td data-label="Kanal payı">
+                            @if (item.Allocations.Count == 0)
+                            {
+                                <span>—</span>
+                            }
+                            else
+                            {
+                                var first = true;
+                                foreach (var allocation in item.Allocations)
+                                {
+                                    if (!first)
+                                    {
+                                        <span> · </span>
+                                    }
+
+                                    first = false;
+                                    <span>@allocation.ChannelName @allocation.Quantity</span>
+                                }
+                            }
+                        </td>
+                        <td data-label="Perakende">
+                            <strong>@item.RetailQuantity</strong>
+                        </td>
+                        <td data-label="Durum">
+                            <span class="status @item.StockStatusCss">
+                                @item.StockStatusText
+                            </span>
+                        </td>
+                        <td data-label="Trendyol barkodu" class="stock-barcode">
+                            @(string.IsNullOrWhiteSpace(item.TrendyolBarcode) ? "—" : item.TrendyolBarcode)
+                        </td>
+                        <td data-label="Site barkodu" class="stock-barcode">
+                            @(string.IsNullOrWhiteSpace(item.WebsiteBarcode) ? "—" : item.WebsiteBarcode)
+                        </td>
+                        <td data-label="Eklenme" class="order-date">
+                            @item.CreatedAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")
+                        </td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+
+    @if (totalPages > 1)
+    {
+        <div class="pagination">
+            <span>
+                Sayfa @(Model.Page + 1) / @totalPages
+                · @Model.Total kayıt
+            </span>
+
+            <div>
+                @if (Model.Page > 0)
+                {
+                    <a href="@Url.Action("Index", "Catalog", new { page = Model.Page - 1, size = Model.Size, search })">
+                        ← Önceki
+                    </a>
+                }
+
+                @if (Model.Page + 1 < totalPages)
+                {
+                    <a href="@Url.Action("Index", "Catalog", new { page = Model.Page + 1, size = Model.Size, search })">
+                        Sonraki →
+                    </a>
+                }
+            </div>
+        </div>
+    }
+</div>
+
+<div class="user-modal-backdrop" id="productModal" aria-hidden="true">
+    <div class="user-modal" role="dialog" aria-modal="true">
+        <div class="user-modal-header">
+            <div class="user-modal-title">
+                <div class="user-modal-icon">+</div>
+                <div>
+                    <h2>Ürün Ekle</h2>
+                    <p>Trendyol ve site siparişleri bu barkodlarla eşleşir.</p>
+                </div>
+            </div>
+            <button type="button" class="user-modal-close" id="closeProductModal" aria-label="Kapat">×</button>
+        </div>
+        <form asp-action="Create" method="post">
+            @Html.AntiForgeryToken()
+            <div class="user-modal-body">
+                <div class="user-form-grid">
+                    <div class="user-form-group user-form-full">
+                        <label for="productName">Ürün adı</label>
+                        <input id="productName" name="Name" maxlength="300" required />
+                    </div>
+                    <div class="user-form-group">
+                        <label for="productQuantity">Stok adedi</label>
+                        <input id="productQuantity" name="Quantity" type="number" min="0" value="0" required />
+                    </div>
+                    <div class="user-form-group">
+                        <label for="trendyolBarcode">Trendyol barkodu</label>
+                        <input id="trendyolBarcode" name="TrendyolBarcode" maxlength="150" />
+                    </div>
+                    <div class="user-form-group">
+                        <label for="websiteBarcode">E-ticaret barkodu</label>
+                        <input id="websiteBarcode" name="WebsiteBarcode" maxlength="150" />
+                    </div>
+                    <div class="user-form-group">
+                        <label for="trendyolAllocation">Trendyol payı</label>
+                        <input id="trendyolAllocation" name="TrendyolAllocation" type="number" min="0" value="0" />
+                    </div>
+                    <div class="user-form-group">
+                        <label for="websiteAllocation">E-ticaret payı</label>
+                        <input id="websiteAllocation" name="WebsiteAllocation" type="number" min="0" value="0" />
+                    </div>
+                </div>
+            </div>
+            <div class="user-modal-footer">
+                <button type="button" class="user-modal-cancel" id="cancelProductModal">Vazgeç</button>
+                <button type="submit" class="user-modal-submit">Ürünü Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+<script>
+(() => {
+    const modal = document.getElementById("productModal");
+    const open = () => {
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+        document.getElementById("productName")?.focus();
+    };
+    const close = () => {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+    };
+    document.getElementById("openProductModal")?.addEventListener("click", open);
+    document.getElementById("closeProductModal")?.addEventListener("click", close);
+    document.getElementById("cancelProductModal")?.addEventListener("click", close);
+    modal?.addEventListener("click", event => {
+        if (event.target === modal) close();
+    });
+})();
+</script>
+@if (TempData["OpenModal"] as string == "product")
+{
+    <script>document.getElementById("productModal")?.classList.add("open");</script>
+}

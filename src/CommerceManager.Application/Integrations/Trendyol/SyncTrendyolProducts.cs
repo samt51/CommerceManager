@@ -6,7 +6,8 @@ public sealed record TrendyolProductSyncResult(
     int Received,
     int Inserted,
     int Updated,
-    int Unchanged);
+    int Unchanged,
+    int CatalogInserted);
 
 public interface ITrendyolProductStore
 {

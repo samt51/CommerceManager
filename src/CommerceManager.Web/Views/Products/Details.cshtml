@@ -81,6 +81,24 @@
                         </div>
                     }
 
+                    @{
+                        var hasDiscount = Model.SalePrice is not null &&
+                            Model.ListPrice is not null &&
+                            Model.ListPrice > Model.SalePrice;
+                    }
+                    <div class="ty-price-card">
+                        <div>
+                            <span>Müşterinin ödediği</span>
+                            <strong>@(Model.SalePrice is null ? "—" : TurkishMoney.Format(Model.SalePrice.Value))</strong>
+                            <em>Trendyol satış fiyatı</em>
+                        </div>
+                        <div>
+                            <span>Üstü çizilen fiyat</span>
+                            <strong class="@(hasDiscount ? "is-struck" : null)">@(Model.ListPrice is null ? "—" : TurkishMoney.Format(Model.ListPrice.Value))</strong>
+                            <em>@(hasDiscount ? "İndirimli gösteriliyor" : "Liste fiyatı, indirim yok")</em>
+                        </div>
+                    </div>
+
                     <div class="product-detail-stock-box">
 
                         <div>
@@ -109,10 +127,12 @@
                     </strong>
                 </div>
 
-                <div class="detail-field">
-                    <span>Barkod</span>
+                <div class="detail-field product-detail-barcode">
+                    <span>Trendyol Barkodu</span>
                     <strong class="product-detail-code">
-                        @Model.Barcode
+                        @(string.IsNullOrWhiteSpace(Model.Barcode)
+                            ? "—"
+                            : Model.Barcode)
                     </strong>
                 </div>
 

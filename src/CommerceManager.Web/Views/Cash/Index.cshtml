@@ -1,0 +1,189 @@
+@model CommerceManager.Web.Models.CashPage
+
+@{
+    ViewData["Title"] = "Kasa";
+}
+
+<div class="page-heading">
+    <div>
+        <h1>Kasa</h1>
+        <p>Girişler kasayı artırır. Giderler otomatik çıkış yazar. Perakende satış stoktan düşer ve tutarı kasaya ekler.</p>
+    </div>
+    <button type="button" class="users-primary-button" id="openSaleModal">
+        <span>＋</span>
+        Perakende Satış
+    </button>
+</div>
+
+@if (TempData["SuccessMessage"] is string success)
+{
+    <div class="profile-alert profile-alert-success"><span>✓</span> @success</div>
+}
+@if (TempData["CashError"] is string error)
+{
+    <div class="alert-error">@error</div>
+}
+@if (ViewBag.ApiError is not null)
+{
+    <div class="alert-error">@ViewBag.ApiError</div>
+}
+
+<div class="summary-grid">
+    <div class="summary-card">
+        <span>Kasa</span>
+        <strong>@TurkishMoney.Format(Model.Balance)</strong>
+        <small>Giriş eksi çıkış</small>
+    </div>
+    <div class="summary-card">
+        <span>Giriş</span>
+        <strong>@TurkishMoney.Format(Model.TotalIn)</strong>
+        <small>Elde tutulan</small>
+    </div>
+    <div class="summary-card">
+        <span>Çıkış</span>
+        <strong>@TurkishMoney.Format(Model.TotalOut)</strong>
+        <small>Giderler dahil</small>
+    </div>
+</div>
+
+<div class="profile-form-card catalog-create-card">
+    <div class="profile-card-header">
+        <h2>Kasa girişi</h2>
+        <p>Kasaya konan nakit. Gider buradan düşer.</p>
+    </div>
+    <form asp-action="AddInflow" method="post">
+        @Html.AntiForgeryToken()
+        <div class="profile-field">
+            <label>Tutar</label>
+            <input name="AmountText" class="profile-input money-input" inputmode="decimal" placeholder="1.000,50" />
+        </div>
+        <div class="profile-field">
+            <label>Açıklama</label>
+            <input name="Description" class="profile-input" placeholder="Örnek: Gün başı kasa" />
+        </div>
+        <div class="profile-actions">
+            <button type="submit" class="profile-primary-button">Girişi Kaydet</button>
+        </div>
+    </form>
+</div>
+
+<div class="panel">
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Tarih</th>
+                    <th>Hareket</th>
+                    <th>Açıklama</th>
+                    <th>Tutar</th>
+                </tr>
+            </thead>
+            <tbody>
+            @if (Model.Items.Count == 0)
+            {
+                <tr><td colspan="4" class="empty">Henüz kasa hareketi yok.</td></tr>
+            }
+            else
+            {
+                foreach (var item in Model.Items)
+                {
+                    <tr>
+                        <td>@item.OccurredAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                        <td>@item.DirectionText</td>
+                        <td>@item.Description</td>
+                        <td>@TurkishMoney.Format(item.Amount)</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+@{
+    var products = ViewBag.Products as List<CatalogProductRow> ?? [];
+}
+
+<div class="user-modal-backdrop" id="saleModal" aria-hidden="true">
+    <div class="user-modal" role="dialog" aria-modal="true">
+        <div class="user-modal-header">
+            <div class="user-modal-title">
+                <div class="user-modal-icon">+</div>
+                <div>
+                    <h2>Perakende Satış</h2>
+                    <p>Perakende stoktan düşer, tutar kasaya girer.</p>
+                </div>
+            </div>
+            <button type="button" class="user-modal-close" id="closeSaleModal" aria-label="Kapat">×</button>
+        </div>
+        <form asp-action="Sell" method="post">
+            @Html.AntiForgeryToken()
+            <div class="user-modal-body">
+                <div class="user-form-group user-form-full">
+                    <label for="saleProduct">Ürün</label>
+                    <select id="saleProduct" name="CatalogProductId" required>
+                        <option value="">Seçin</option>
+                        @foreach (var product in products)
+                        {
+                            <option value="@product.Id">@product.Name · perakende @product.RetailQuantity</option>
+                        }
+                    </select>
+                </div>
+                <div class="user-form-group user-form-full">
+                    <label for="saleQuantity">Adet</label>
+                    <input id="saleQuantity" name="Quantity" type="number" min="1" value="1" required />
+                </div>
+                <div class="user-form-group user-form-full">
+                    <label for="salePrice">Birim fiyat</label>
+                    <input id="salePrice" name="UnitPriceText" inputmode="decimal" placeholder="199,90" required />
+                </div>
+            </div>
+            <div class="user-modal-footer">
+                <button type="button" class="user-modal-cancel" id="cancelSaleModal">Vazgeç</button>
+                <button type="submit" class="user-modal-submit">Satışı Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<script>
+(() => {
+    const modal = document.getElementById("saleModal");
+    const price = document.getElementById("salePrice");
+    const cashAmount = document.querySelector(".money-input");
+    const format = input => {
+        if (!input) return;
+        input.addEventListener("blur", () => {
+            const digits = input.value.replace(/[^\d,]/g, "");
+            if (!digits) return;
+            const number = Number(digits.replace(/\./g, "").replace(",", "."));
+            if (!Number.isFinite(number)) return;
+            input.value = new Intl.NumberFormat("tr-TR", {
+                minimumFractionDigits: 2,
+                maximumFractionDigits: 2,
+                useGrouping: false
+            }).format(number);
+        });
+    };
+    format(price);
+    format(cashAmount);
+    const open = () => {
+        modal.classList.add("open");
+        modal.setAttribute("aria-hidden", "false");
+    };
+    const close = () => {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+    };
+    document.getElementById("openSaleModal")?.addEventListener("click", open);
+    document.getElementById("closeSaleModal")?.addEventListener("click", close);
+    document.getElementById("cancelSaleModal")?.addEventListener("click", close);
+    modal?.addEventListener("click", event => {
+        if (event.target === modal) close();
+    });
+})();
+</script>
+@if (TempData["OpenModal"] as string == "sale")
+{
+    <script>document.getElementById("saleModal")?.classList.add("open");</script>
+}

@@ -81,6 +81,10 @@ public sealed class ProductDetails
 
     public DateTimeOffset? StockUpdatedAt { get; set; }
 
+    public decimal? SalePrice { get; set; }
+
+    public decimal? ListPrice { get; set; }
+
     public string StockText =>
         Quantity.HasValue
             ? Quantity.Value.ToString()

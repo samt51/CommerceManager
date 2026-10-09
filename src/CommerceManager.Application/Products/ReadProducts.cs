@@ -64,7 +64,9 @@ public sealed record ProductDetails(
     string? ImageUrl,
     int? Quantity,
     DateTimeOffset ProductUpdatedAt,
-    DateTimeOffset? StockUpdatedAt);
+    DateTimeOffset? StockUpdatedAt,
+    decimal? SalePrice = null,
+    decimal? ListPrice = null);
 
 public sealed record GetTrendyolProduct(Guid Id)
     : IRequest<ProductDetails?>;

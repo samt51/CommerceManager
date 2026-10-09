@@ -59,4 +59,23 @@ public sealed class Order
         ExternalLastModifiedAt = lastModifiedAt;
         TotalAmount = totalAmount;
     }
+
+    public void UpdateWebsiteOrder(
+        string orderNumber,
+        string status,
+        DateTimeOffset lastModifiedAt,
+        decimal totalAmount)
+    {
+        if (Channel != SalesChannel.Website)
+            throw new InvalidOperationException("Not a website order.");
+        if (string.IsNullOrWhiteSpace(orderNumber))
+            throw new ArgumentException("Order number is required.");
+        if (totalAmount < 0)
+            throw new ArgumentOutOfRangeException(nameof(totalAmount));
+
+        OrderNumber = orderNumber;
+        Status = status;
+        ExternalLastModifiedAt = lastModifiedAt;
+        TotalAmount = totalAmount;
+    }
 }

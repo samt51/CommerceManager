@@ -35,11 +35,41 @@ public sealed record DashboardData(
     IReadOnlyList<DashboardStatusItem> OrderStatuses,
     IReadOnlyList<DashboardDailySalesItem> DailySales);
 
+public sealed record BusinessOverview(
+    decimal RetailRevenue,
+    int RetailSales,
+    decimal TrendyolRevenue,
+    int TrendyolOrders,
+    decimal WebsiteRevenue,
+    int WebsiteOrders,
+    decimal CashBalance,
+    decimal TodayExpenses,
+    int OnHandQuantity,
+    int OutOfStockProducts,
+    bool TrendyolFinanceAvailable,
+    decimal TrendyolCommission,
+    decimal TrendyolDiscount,
+    decimal TrendyolSellerRevenue);
+
 public interface IDashboardReader
 {
     Task<DashboardData> GetTrendyolAsync(
         string period,
         CancellationToken cancellationToken);
+
+    Task<BusinessOverview> GetOverviewAsync(
+        CancellationToken cancellationToken);
+}
+
+public sealed record GetBusinessOverview : IRequest<BusinessOverview>;
+
+public sealed class GetBusinessOverviewHandler(IDashboardReader reader)
+    : IRequestHandler<GetBusinessOverview, BusinessOverview>
+{
+    public Task<BusinessOverview> Handle(
+        GetBusinessOverview request,
+        CancellationToken cancellationToken) =>
+        reader.GetOverviewAsync(cancellationToken);
 }
 
 public sealed record GetTrendyolDashboard(

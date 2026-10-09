@@ -34,6 +34,7 @@ public sealed class ProductSyncResult
     public int Inserted { get; set; }
     public int Updated { get; set; }
     public int Unchanged { get; set; }
+    public int CatalogInserted { get; set; }
 }
 
 public sealed class InventorySyncResult

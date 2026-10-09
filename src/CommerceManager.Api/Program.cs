@@ -78,6 +78,20 @@ builder.Services.AddHttpClient<
     CommerceManager.Application.Integrations.Trendyol.ITrendyolInventoryReader,
     CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolInventoryReader>();
 
+builder.Services.AddHttpClient<CommerceManager.Infrastructure.Integrations.TSoft.TSoftClient>(client =>
+{
+    client.Timeout = TimeSpan.FromMinutes(3);
+    client.DefaultRequestHeaders.UserAgent.ParseAdd("CommerceManager");
+});
+
+builder.Services.AddHttpClient<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolStockPublisher,
+    CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolStockPublisher>();
+
+builder.Services.AddHttpClient<
+    CommerceManager.Application.Integrations.Trendyol.ITrendyolSettlementReader,
+    CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolSettlementReader>();
+
 builder.Services.AddScoped<
     CommerceManager.Application.Integrations.Trendyol.ITrendyolInventoryStore,
     CommerceManager.Infrastructure.Integrations.Trendyol.TrendyolInventoryStore>();

@@ -1,16 +1,51 @@
-using CommerceManager.Application.Orders;
-using MediatR;
+using CommerceManager.Infrastructure.Catalog;
+using CommerceManager.Infrastructure.Persistence;
 using Microsoft.AspNetCore.Mvc;
+
 namespace CommerceManager.Api.Controllers;
-[ApiController, Route("api/retail-sales")]
-public sealed class RetailSalesController(ISender sender) : ControllerBase
+
+[ApiController]
+[Route("api/retail-sales")]
+public sealed class RetailSalesController(
+    RetailSaleStore store,
+    TrendyolAllocationPublisher trendyolAllocation) : ControllerBase
 {
-    [HttpPost]
-    public async Task<IActionResult> Create([FromBody] CreateRetailSale request, CancellationToken cancellationToken)
+    [HttpGet]
+    public async Task<IActionResult> List(CancellationToken cancellationToken)
     {
-        if (request.TotalAmount < 0) return BadRequest("TotalAmount cannot be negative.");
-        var id = await sender.Send(request, cancellationToken);
-        return Created($"/api/retail-sales/{id}", new { id });
-        
+        return Ok(await store.ListAsync(cancellationToken));
+    }
+
+    [HttpPost]
+    public async Task<IActionResult> Create(
+        [FromBody] CreateRetailSaleRequest request,
+        CancellationToken cancellationToken)
+    {
+        var result = await store.AddAsync(
+            request.CatalogProductId,
+            request.Quantity,
+            request.UnitPrice,
+            request.CustomerName,
+            request.CustomerPhone,
+            cancellationToken);
+
+        if (!result.Success)
+            return BadRequest(new { message = result.Error });
+
+        await trendyolAllocation.PushAsync(request.CatalogProductId, cancellationToken);
+        return Ok();
+    }
+
+    public sealed class CreateRetailSaleRequest
+    {
+        public Guid CatalogProductId { get; set; }
+
+        public int Quantity { get; set; }
+
+        public decimal UnitPrice { get; set; }
+
+        public string? CustomerName { get; set; }
+
+        public string? CustomerPhone { get; set; }
     }
 }

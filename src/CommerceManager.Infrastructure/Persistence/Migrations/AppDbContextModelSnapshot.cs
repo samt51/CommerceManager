@@ -22,6 +22,323 @@ namespace CommerceManager.Infrastructure.Persistence.Migrations
 
             SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
 
+            modelBuilder.Entity("CommerceManager.Domain.Cash.CashMovement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Direction")
+                        .HasColumnType("int");
+
+                    b.Property<Guid?>("ExpenseId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpenseId")
+                        .IsUnique()
+                        .HasFilter("[ExpenseId] IS NOT NULL");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.ToTable("CashMovements");
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Cash.Expense", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<Guid>("ExpenseTypeId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ExpenseTypeId");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.ToTable("Expenses");
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Cash.ExpenseType", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name")
+                        .IsUnique();
+
+                    b.ToTable("ExpenseTypes");
+
+                    b.HasData(
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111101"),
+                            IsActive = true,
+                            Name = "Benzin & Mazot"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111102"),
+                            IsActive = true,
+                            Name = "Araç harçlığı"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111103"),
+                            IsActive = true,
+                            Name = "Yemek"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111104"),
+                            IsActive = true,
+                            Name = "Kira"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111105"),
+                            IsActive = true,
+                            Name = "Elektrik"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111106"),
+                            IsActive = true,
+                            Name = "Su"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111107"),
+                            IsActive = true,
+                            Name = "Doğalgaz"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111108"),
+                            IsActive = true,
+                            Name = "Telefon / internet"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111109"),
+                            IsActive = true,
+                            Name = "Kargo"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111110"),
+                            IsActive = true,
+                            Name = "Personel"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111111"),
+                            IsActive = true,
+                            Name = "Mutfak / market"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111112"),
+                            IsActive = true,
+                            Name = "Bakım onarım"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111113"),
+                            IsActive = true,
+                            Name = "Vergi / SGK"
+                        },
+                        new
+                        {
+                            Id = new Guid("8f1c2a10-6b4e-4a1d-9c11-111111111114"),
+                            IsActive = true,
+                            Name = "Diğer"
+                        });
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Catalog.CatalogBarcode", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Barcode")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<Guid>("CatalogProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("int");
+
+                    b.Property<decimal?>("ListPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<int>("Units")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasDefaultValue(1);
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CatalogProductId");
+
+                    b.HasIndex("Channel", "Barcode")
+                        .IsUnique();
+
+                    b.ToTable("CatalogBarcodes");
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Catalog.CatalogChannelAllocation", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CatalogProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("int");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CatalogProductId", "Channel")
+                        .IsUnique();
+
+                    b.ToTable("CatalogChannelAllocations");
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Catalog.CatalogProduct", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("Description")
+                        .HasMaxLength(2000)
+                        .HasColumnType("nvarchar(2000)");
+
+                    b.Property<string>("ImageUrl")
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(300)
+                        .HasColumnType("nvarchar(300)");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("SalePrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<DateTimeOffset>("UpdatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CreatedAt");
+
+                    b.ToTable("CatalogProducts");
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Catalog.CatalogStockMovement", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Barcode")
+                        .IsRequired()
+                        .HasMaxLength(150)
+                        .HasColumnType("nvarchar(150)");
+
+                    b.Property<Guid>("CatalogProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<int>("Channel")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<string>("ReferenceId")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("ReferenceType")
+                        .IsRequired()
+                        .HasMaxLength(50)
+                        .HasColumnType("nvarchar(50)");
+
+                    b.Property<int>("Type")
+                        .HasColumnType("int");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CatalogProductId");
+
+                    b.HasIndex("Channel", "ReferenceType", "ReferenceId", "Barcode", "Type")
+                        .IsUnique();
+
+                    b.ToTable("CatalogStockMovements");
+                });
+
             modelBuilder.Entity("CommerceManager.Domain.Integrations.MarketplaceIntegrationStatus", b =>
                 {
                     b.Property<Guid>("Id")
@@ -136,6 +453,72 @@ namespace CommerceManager.Infrastructure.Persistence.Migrations
                     b.ToTable("StockMovements");
                 });
 
+            modelBuilder.Entity("CommerceManager.Domain.Ledger.CurrentAccount", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<DateTimeOffset>("CreatedAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit");
+
+                    b.Property<int>("Kind")
+                        .HasColumnType("int");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("Phone")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<string>("TaxNumber")
+                        .HasMaxLength(20)
+                        .HasColumnType("nvarchar(20)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("Name");
+
+                    b.ToTable("CurrentAccounts");
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Ledger.CurrentAccountEntry", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<decimal>("Amount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<Guid>("CurrentAccountId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("Description")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)");
+
+                    b.Property<int>("Direction")
+                        .HasColumnType("int");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CurrentAccountId");
+
+                    b.ToTable("CurrentAccountEntries");
+                });
+
             modelBuilder.Entity("CommerceManager.Domain.Orders.Order", b =>
                 {
                     b.Property<Guid>("Id")
@@ -216,6 +599,46 @@ namespace CommerceManager.Infrastructure.Persistence.Migrations
                         .IsUnique();
 
                     b.ToTable("OrderItems");
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Orders.RetailSale", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<Guid>("CatalogProductId")
+                        .HasColumnType("uniqueidentifier");
+
+                    b.Property<string>("CustomerName")
+                        .HasMaxLength(200)
+                        .HasColumnType("nvarchar(200)");
+
+                    b.Property<string>("CustomerPhone")
+                        .HasMaxLength(30)
+                        .HasColumnType("nvarchar(30)");
+
+                    b.Property<DateTimeOffset>("OccurredAt")
+                        .HasColumnType("datetimeoffset");
+
+                    b.Property<int>("Quantity")
+                        .HasColumnType("int");
+
+                    b.Property<decimal>("TotalAmount")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.Property<decimal>("UnitPrice")
+                        .HasPrecision(18, 2)
+                        .HasColumnType("decimal(18,2)");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CatalogProductId");
+
+                    b.HasIndex("OccurredAt");
+
+                    b.ToTable("RetailSales");
                 });
 
             modelBuilder.Entity("CommerceManager.Domain.Products.Product", b =>
@@ -385,12 +808,74 @@ namespace CommerceManager.Infrastructure.Persistence.Migrations
                     b.ToTable("Users");
                 });
 
+            modelBuilder.Entity("CommerceManager.Domain.Cash.CashMovement", b =>
+                {
+                    b.HasOne("CommerceManager.Domain.Cash.Expense", null)
+                        .WithMany()
+                        .HasForeignKey("ExpenseId")
+                        .OnDelete(DeleteBehavior.Restrict);
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Cash.Expense", b =>
+                {
+                    b.HasOne("CommerceManager.Domain.Cash.ExpenseType", null)
+                        .WithMany()
+                        .HasForeignKey("ExpenseTypeId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Catalog.CatalogBarcode", b =>
+                {
+                    b.HasOne("CommerceManager.Domain.Catalog.CatalogProduct", null)
+                        .WithMany()
+                        .HasForeignKey("CatalogProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Catalog.CatalogChannelAllocation", b =>
+                {
+                    b.HasOne("CommerceManager.Domain.Catalog.CatalogProduct", null)
+                        .WithMany()
+                        .HasForeignKey("CatalogProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Catalog.CatalogStockMovement", b =>
+                {
+                    b.HasOne("CommerceManager.Domain.Catalog.CatalogProduct", null)
+                        .WithMany()
+                        .HasForeignKey("CatalogProductId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Ledger.CurrentAccountEntry", b =>
+                {
+                    b.HasOne("CommerceManager.Domain.Ledger.CurrentAccount", null)
+                        .WithMany()
+                        .HasForeignKey("CurrentAccountId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
             modelBuilder.Entity("CommerceManager.Domain.Orders.OrderItem", b =>
                 {
                     b.HasOne("CommerceManager.Domain.Orders.Order", null)
                         .WithMany("Items")
                         .HasForeignKey("OrderId")
                         .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("CommerceManager.Domain.Orders.RetailSale", b =>
+                {
+                    b.HasOne("CommerceManager.Domain.Catalog.CatalogProduct", null)
+                        .WithMany()
+                        .HasForeignKey("CatalogProductId")
+                        .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
                 });
 
