@@ -1,0 +1,171 @@
+@model CommerceManager.Web.Controllers.BusinessReportPage
+
+@{
+    ViewData["Title"] = "Raporlar";
+    var period = ViewBag.Period as string ?? "day";
+    var title = period == "week" ? "Bu hafta" : period == "month" ? "Bu ay" : "Bugün";
+}
+
+<div class="page-heading">
+    <div>
+        <h1>Raporlar</h1>
+        <p>Kasa, gider ve cari. Ciro satılan tutardır, kâr değildir.</p>
+    </div>
+</div>
+
+<div class="channel-tabs">
+    <a class="@(period == "day" ? "is-on" : null)" href="/Reports?period=day">Bugün</a>
+    <a class="@(period == "week" ? "is-on" : null)" href="/Reports?period=week">Bu hafta</a>
+    <a class="@(period == "month" ? "is-on" : null)" href="/Reports?period=month">Bu ay</a>
+</div>
+
+@if (!string.IsNullOrWhiteSpace(Model.Overview.ApiError))
+{
+    <div class="alert-error">@Model.Overview.ApiError</div>
+}
+
+<div class="summary-grid">
+    <div class="summary-card">
+        <span>Kasa bakiyesi</span>
+        <strong>@TurkishMoney.Format(Model.CashBalance)</strong>
+        <small>@title giriş @TurkishMoney.Format(Model.CashInPeriod)</small>
+    </div>
+    <div class="summary-card">
+        <span>Dönem gideri</span>
+        <strong>@TurkishMoney.Format(Model.ExpenseTotal)</strong>
+        <small>@title çıkış @TurkishMoney.Format(Model.CashOutPeriod)</small>
+    </div>
+    <div class="summary-card">
+        <span>Cari</span>
+        <strong>@TurkishMoney.Format(Model.Receivable)</strong>
+        <small>Borç @TurkishMoney.Format(Model.Payable) alacak</small>
+    </div>
+</div>
+
+<div class="report-grid">
+    <div class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>Giderler</h2>
+                <p>@title, tipe göre</p>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Tip</th><th>Adet</th><th>Tutar</th></tr>
+                </thead>
+                <tbody>
+                @if (Model.ExpenseGroups.Count == 0)
+                {
+                    <tr><td colspan="3" class="empty">Bu dönemde gider yok.</td></tr>
+                }
+                else
+                {
+                    foreach (var row in Model.ExpenseGroups)
+                    {
+                        <tr>
+                            <td>@row.Name</td>
+                            <td>@row.Count</td>
+                            <td>@TurkishMoney.Format(row.Amount)</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div class="panel">
+        <div class="panel-header">
+            <div>
+                <h2>Kasa hareketi</h2>
+                <p>@title</p>
+            </div>
+        </div>
+        <div class="table-wrap">
+            <table>
+                <thead>
+                    <tr><th>Tarih</th><th>Hareket</th><th>Tutar</th></tr>
+                </thead>
+                <tbody>
+                @if (Model.CashMovements.Count == 0)
+                {
+                    <tr><td colspan="3" class="empty">Bu dönemde kasa hareketi yok.</td></tr>
+                }
+                else
+                {
+                    foreach (var row in Model.CashMovements)
+                    {
+                        <tr>
+                            <td>@row.OccurredAt.ToLocalTime().ToString("dd.MM.yyyy HH:mm")</td>
+                            <td>@row.DirectionText</td>
+                            <td>@TurkishMoney.Format(row.Amount)</td>
+                        </tr>
+                    }
+                }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2>Cariler</h2>
+            <p>Bakiyesi olan hesaplar. Borçlu cari sizden alacaklı değildir; size borçludur.</p>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Cari</th><th>Tip</th><th>Durum</th><th>Bakiye</th></tr>
+            </thead>
+            <tbody>
+            @if (Model.Accounts.Count == 0)
+            {
+                <tr><td colspan="4" class="empty">Cari yok.</td></tr>
+            }
+            else
+            {
+                foreach (var row in Model.Accounts)
+                {
+                    <tr>
+                        <td><a href="/CurrentAccounts/Details/@row.Id">@row.Name</a></td>
+                        <td>@row.KindText</td>
+                        <td>@row.BalanceText</td>
+                        <td>@TurkishMoney.Format(row.Balance)</td>
+                    </tr>
+                }
+            }
+            </tbody>
+        </table>
+    </div>
+</div>
+
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2>Satış tutarı</h2>
+            <p>@title. Paket tutarıdır, kârdan ayrıdır.</p>
+        </div>
+    </div>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr><th>Kanal</th><th>Satış</th><th>Tutar</th></tr>
+            </thead>
+            <tbody>
+                <tr><td>Perakende</td><td>@Model.Overview.RetailSales</td><td>@TurkishMoney.Format(Model.Overview.RetailRevenue)</td></tr>
+                <tr><td>Trendyol</td><td>@Model.Overview.TrendyolOrders</td><td>@TurkishMoney.Format(Model.Overview.TrendyolRevenue)</td></tr>
+                <tr><td>E-ticaret</td><td>@Model.Overview.WebsiteOrders</td><td>@TurkishMoney.Format(Model.Overview.WebsiteRevenue)</td></tr>
+                <tr>
+                    <td><strong>Toplam</strong></td>
+                    <td><strong>@Model.Overview.TotalSales</strong></td>
+                    <td><strong>@TurkishMoney.Format(Model.Overview.TotalRevenue)</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

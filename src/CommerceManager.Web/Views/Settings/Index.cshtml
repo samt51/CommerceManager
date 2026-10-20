@@ -1,0 +1,46 @@
+@model CommerceManager.Web.Controllers.IntegrationStatusModel
+
+@{
+    ViewData["Title"] = "Ayarlar";
+}
+
+<div class="page-heading">
+    <div>
+        <h1>Ayarlar</h1>
+        <p>Bağlı kanallar. Şifre bu ekranda yok.</p>
+    </div>
+</div>
+
+@if (ViewBag.ApiError is not null)
+{
+    <div class="alert-error">@ViewBag.ApiError</div>
+}
+
+<div class="settings-grid">
+    <article class="settings-card">
+        <div class="settings-card-top">
+            <span class="settings-mark">T</span>
+            <span class="status @(Model.Trendyol ? "accepted" : "cancelled")">@(Model.Trendyol ? "Bağlı" : "Yok")</span>
+        </div>
+        <h2>Trendyol</h2>
+        <p>Sipariş, stok ve bugünün finans kaydı okunur. Stok, ürün kartından gönderilir.</p>
+    </article>
+
+    <article class="settings-card">
+        <div class="settings-card-top">
+            <span class="settings-mark">E</span>
+            <span class="status @(Model.Website ? "accepted" : "cancelled")">@(Model.Website ? "Bağlı" : "Yok")</span>
+        </div>
+        <h2>E-ticaret</h2>
+        <p>@(string.IsNullOrWhiteSpace(Model.WebsiteHost) ? "T-Soft bağlı değil." : Model.WebsiteHost)</p>
+    </article>
+
+    <article class="settings-card">
+        <div class="settings-card-top">
+            <span class="settings-mark">₺</span>
+            <span class="status neutral">Kapalı</span>
+        </div>
+        <h2>Alış fiyatı</h2>
+        <p>Tutulmuyor. Raporlarda ciro var, kâr yok.</p>
+    </article>
+</div>
