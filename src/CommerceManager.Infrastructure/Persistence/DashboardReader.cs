@@ -3,6 +3,7 @@ using CommerceManager.Application.Integrations.Trendyol;
 using CommerceManager.Domain.Cash;
 using CommerceManager.Domain.Orders;
 using CommerceManager.Domain.Returns;
+using CommerceManager.Infrastructure.Integrations.TSoft;
 using Microsoft.EntityFrameworkCore;
 
 namespace CommerceManager.Infrastructure.Persistence;
@@ -10,7 +11,9 @@ namespace CommerceManager.Infrastructure.Persistence;
 public sealed class DashboardReader(
     AppDbContext db,
     ITrendyolPackageReader trendyolPackages,
-    ITrendyolSettlementReader trendyolSettlements)
+    ITrendyolSettlementReader trendyolSettlements,
+    TSoftTodayReader websiteToday,
+    TSoftOrderReader websiteOrders)
     : IDashboardReader
 {
     public async Task<DashboardData> GetTrendyolAsync(
@@ -214,6 +217,7 @@ public sealed class DashboardReader(
     }
 
     public async Task<BusinessOverview> GetOverviewAsync(
+        string period,
         CancellationToken cancellationToken)
     {
         TimeZoneInfo zone;
@@ -232,7 +236,7 @@ public sealed class DashboardReader(
         }
 
         var localNow = TimeZoneInfo.ConvertTime(DateTimeOffset.UtcNow, zone);
-        var start = new DateTimeOffset(
+        var today = new DateTimeOffset(
             localNow.Year,
             localNow.Month,
             localNow.Day,
@@ -240,7 +244,13 @@ public sealed class DashboardReader(
             0,
             0,
             localNow.Offset);
-        var end = start.AddDays(1);
+        var start = period switch
+        {
+            "week" => today.AddDays(-6),
+            "month" => new DateTimeOffset(localNow.Year, localNow.Month, 1, 0, 0, 0, localNow.Offset),
+            _ => today
+        };
+        var end = today.AddDays(1);
 
         var retail = await db.RetailSales.AsNoTracking()
             .Where(x => x.OccurredAt >= start && x.OccurredAt < end)
@@ -248,9 +258,10 @@ public sealed class DashboardReader(
             .Select(x => new { Amount = x.Sum(s => s.TotalAmount), Count = x.Count() })
             .FirstOrDefaultAsync(cancellationToken);
 
+        await websiteOrders.OrdersAsync(cancellationToken);
         var trendyol = await TrendyolTodayAsync(start, cancellationToken);
         var settlement = await trendyolSettlements.ReadRangeAsync(start, end, cancellationToken);
-        var website = await ChannelTodayAsync(SalesChannel.Website, start, end, cancellationToken);
+        var website = await websiteToday.ReadAsync(start, end, cancellationToken);
 
         var cashIn = await db.CashMovements.AsNoTracking()
             .Where(x => x.Direction == CashDirection.In)
@@ -298,7 +309,7 @@ public sealed class DashboardReader(
         var orders = new HashSet<string>(StringComparer.Ordinal);
         decimal amount = 0;
 
-        for (var page = 0; page < 10; page++)
+        for (var page = 0; page < 15; page++)
         {
             var result = await trendyolPackages.ReadPageAsync(
                 page, 200, startMs, endMs, cancellationToken);
@@ -332,22 +343,4 @@ public sealed class DashboardReader(
         || status.Equals("UnSupplied", StringComparison.OrdinalIgnoreCase)
         || status.Equals("Returned", StringComparison.OrdinalIgnoreCase);
 
-    private async Task<(decimal Amount, int Count)> ChannelTodayAsync(
-        SalesChannel channel,
-        DateTimeOffset start,
-        DateTimeOffset end,
-        CancellationToken cancellationToken)
-    {
-        var row = await db.Orders.AsNoTracking()
-            .Where(x =>
-                x.Channel == channel &&
-                x.OrderedAt >= start &&
-                x.OrderedAt < end &&
-                x.Status != "Cancelled")
-            .GroupBy(_ => 1)
-            .Select(x => new { Amount = x.Sum(o => o.TotalAmount), Count = x.Count() })
-            .FirstOrDefaultAsync(cancellationToken);
-
-        return (row?.Amount ?? 0, row?.Count ?? 0);
-    }
 }

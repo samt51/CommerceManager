@@ -81,6 +81,14 @@ public sealed class CashPage
     public decimal TotalOut { get; set; }
 
     public List<CashMovementItem> Items { get; set; } = [];
+
+    public decimal TrendyolRevenue { get; set; }
+
+    public int TrendyolOrders { get; set; }
+
+    public decimal WebsiteRevenue { get; set; }
+
+    public int WebsiteOrders { get; set; }
 }
 
 public sealed class AddCashInflowViewModel

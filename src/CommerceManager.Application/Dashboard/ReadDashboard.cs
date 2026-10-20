@@ -58,10 +58,11 @@ public interface IDashboardReader
         CancellationToken cancellationToken);
 
     Task<BusinessOverview> GetOverviewAsync(
+        string period,
         CancellationToken cancellationToken);
 }
 
-public sealed record GetBusinessOverview : IRequest<BusinessOverview>;
+public sealed record GetBusinessOverview(string Period = "day") : IRequest<BusinessOverview>;
 
 public sealed class GetBusinessOverviewHandler(IDashboardReader reader)
     : IRequestHandler<GetBusinessOverview, BusinessOverview>
@@ -69,7 +70,7 @@ public sealed class GetBusinessOverviewHandler(IDashboardReader reader)
     public Task<BusinessOverview> Handle(
         GetBusinessOverview request,
         CancellationToken cancellationToken) =>
-        reader.GetOverviewAsync(cancellationToken);
+        reader.GetOverviewAsync(request.Period, cancellationToken);
 }
 
 public sealed record GetTrendyolDashboard(

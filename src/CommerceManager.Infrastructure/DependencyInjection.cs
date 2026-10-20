@@ -25,6 +25,10 @@ public static class DependencyInjection
         services.AddScoped<ICashStore, CashStore>();
         services.AddScoped<ICashReader, CashReader>();
         services.AddScoped<CommerceManager.Infrastructure.Integrations.TSoft.TSoftCatalogSync>();
+        services.AddScoped<CommerceManager.Infrastructure.Integrations.TSoft.TSoftTodayReader>();
+        services.AddScoped<CommerceManager.Infrastructure.Integrations.TSoft.TSoftProductReader>();
+        services.AddScoped<CommerceManager.Infrastructure.Integrations.TSoft.TSoftOrderReader>();
+        services.AddScoped<CommerceManager.Infrastructure.Integrations.TSoft.TSoftStockPublisher>();
         services.AddScoped<RetailSaleStore>();
         services.AddScoped<CommerceManager.Infrastructure.Catalog.TrendyolAllocationPublisher>();
         return services;

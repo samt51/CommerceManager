@@ -115,17 +115,13 @@
 
             <div class="nav-group">
                 <span class="nav-group-label">Sistem</span>
-                <a href="/Marketplaces"
-                   class="@(currentController == "Marketplaces" ? "active" : null)">
-                    <span class="nav-icon">◉</span>
-                    Pazaryerleri
-                </a>
                 <a href="/Products/Trendyol"
                    class="@(currentController == "Products" && currentAction is "Trendyol" or "Details" ? "active" : null)">
                     <span class="nav-icon">▦</span>
-                    Trendyol Ürünleri
+                    Entegrasyon Ürünleri
                 </a>
-                <a href="#">
+                <a href="/Reports"
+                   class="@(currentController == "Reports" ? "active" : null)">
                     <span class="nav-icon">▥</span>
                     Raporlar
                 </a>
@@ -138,7 +134,8 @@
                         Kullanıcılar
                     </a>
                 }
-                <a href="#">
+                <a href="/Settings"
+                   class="@(currentController == "Settings" ? "active" : null)">
                     <span class="nav-icon">⚙</span>
                     Ayarlar
                 </a>

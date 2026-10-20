@@ -12,11 +12,16 @@ public sealed class ReturnsController(
         int page = 0,
         int size = 25,
         int? status = null,
+        string? channel = null,
         CancellationToken cancellationToken = default)
     {
+        var website = string.Equals(channel, "website", StringComparison.OrdinalIgnoreCase);
+        ViewBag.Channel = website ? "website" : "trendyol";
         var client = httpClientFactory.CreateClient("api");
 
-        var url = $"api/returns?page={page}&size={size}&channel=Trendyol";
+        var url = website
+            ? $"api/returns/website?page={page}&size={size}"
+            : $"api/returns?page={page}&size={size}&channel=Trendyol";
 
         if (status.HasValue)
             url += $"&status={status.Value}";

@@ -1,5 +1,6 @@
 using CommerceManager.Application.Catalog;
 using CommerceManager.Application.Integrations.Trendyol;
+using CommerceManager.Infrastructure.Integrations.TSoft;
 using MediatR;
 using Microsoft.AspNetCore.Mvc;
 
@@ -11,6 +12,7 @@ public sealed class CatalogProductsController(
     ISender sender,
     ICatalogProductStore catalogProducts,
     ITrendyolStockPublisher trendyolStock,
+    TSoftStockPublisher websiteStock,
     ITrendyolInventoryReader trendyolInventory) : ControllerBase
 {
     [HttpGet]
@@ -120,10 +122,13 @@ public sealed class CatalogProductsController(
             return BadRequest(new { message = saved.Error });
 
         var barcodes = saved.TrendyolBarcodes ?? [];
-        if (barcodes.Count == 0)
-            return Ok(new { sent = false });
-
         string? batchId = null;
+        if (barcodes.Count == 0)
+        {
+            await PushWebsiteAsync(request, cancellationToken);
+            return Ok(new { sent = false });
+        }
+
         var sendPrice = request.TrendyolListPrice is > 0 &&
             request.TrendyolListPrice != saved.PreviousTrendyolListPrice
             ? request.TrendyolListPrice
@@ -148,7 +153,31 @@ public sealed class CatalogProductsController(
             batchId = pushed.BatchRequestId;
         }
 
+        var websiteError = await PushWebsiteAsync(request, cancellationToken);
+        if (websiteError is not null)
+            return BadRequest(new { message = websiteError, saved = true });
+
         return Ok(new { sent = true, batchRequestId = batchId });
+    }
+
+    private async Task<string?> PushWebsiteAsync(
+        UpdateCatalogProductRequest request,
+        CancellationToken cancellationToken)
+    {
+        foreach (var link in request.Barcodes ?? [])
+        {
+            if (link.Channel != 2 || string.IsNullOrWhiteSpace(link.Barcode))
+                continue;
+
+            var listingQuantity = link.Units <= 1
+                ? request.WebsiteQuantity
+                : request.WebsiteQuantity / link.Units;
+            var pushed = await websiteStock.PushAsync(link.Barcode, listingQuantity, cancellationToken);
+            if (!pushed.Success)
+                return pushed.Error;
+        }
+
+        return null;
     }
 
     public sealed class UpdateCatalogProductRequest

@@ -34,19 +34,31 @@ public sealed class OrderRow
         _ => Status ?? "Bilinmiyor"
     };
 
-    public string StatusCss => Status switch
+    public string StatusCss
     {
-        "Picking" => "pending",
-        "Created" => "pending",
-        "Invoiced" => "info",
-        "Shipped" => "info",
-        "AtCollectionPoint" => "info",
-        "Delivered" => "accepted",
-        "Cancelled" => "cancelled",
-        "UnDelivered" => "rejected",
-        "Returned" => "rejected",
-        _ => "unknown"
-    };
+        get
+        {
+            var text = Status ?? "";
+            if (text.Contains("iptal", StringComparison.OrdinalIgnoreCase))
+                return "cancelled";
+            if (text.Contains("iade", StringComparison.OrdinalIgnoreCase))
+                return "rejected";
+            if (text.Contains("teslim", StringComparison.OrdinalIgnoreCase))
+                return "accepted";
+            if (text.Contains("kargo", StringComparison.OrdinalIgnoreCase))
+                return "info";
+
+            return text switch
+            {
+                "Picking" or "Created" => "pending",
+                "Invoiced" or "Shipped" or "AtCollectionPoint" => "info",
+                "Delivered" => "accepted",
+                "Cancelled" => "cancelled",
+                "UnDelivered" or "Returned" => "rejected",
+                _ => "unknown"
+            };
+        }
+    }
 }
 
 public sealed class OrderDetails

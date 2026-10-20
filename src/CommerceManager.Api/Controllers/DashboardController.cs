@@ -11,9 +11,14 @@ public sealed class DashboardController(
     : ControllerBase
 {
     [HttpGet("overview")]
-    public async Task<IActionResult> Overview(CancellationToken cancellationToken)
+    public async Task<IActionResult> Overview(
+        [FromQuery] string period = "day",
+        CancellationToken cancellationToken = default)
     {
-        return Ok(await sender.Send(new GetBusinessOverview(), cancellationToken));
+        if (period is not ("day" or "week" or "month"))
+            period = "day";
+
+        return Ok(await sender.Send(new GetBusinessOverview(period), cancellationToken));
     }
 
     [HttpGet("trendyol")]

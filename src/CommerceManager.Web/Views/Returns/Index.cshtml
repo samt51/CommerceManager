@@ -14,27 +14,16 @@
 
 <div class="returns-page">
 
-<div class="returns-hero">
-    <div class="returns-hero-icon" aria-hidden="true">
-        <span>↩</span>
+<div class="page-heading">
+    <div>
+        <h1>İadeler</h1>
+        <p>Seçtiğin kanalın iadeleri. E-ticaret, sitede iade kaydı olan siparişleri gösterir.</p>
     </div>
+</div>
 
-    <div class="returns-hero-content">
-        <span class="returns-hero-eyebrow">İADE YÖNETİMİ</span>
-        <h1>İade Yönetimi</h1>
-        <p>
-            Pazaryerlerinden gelen iade taleplerini
-            görüntüleyin ve takip edin.
-        </p>
-
-        <div class="returns-hero-market">
-            Trendyol
-        </div>
-    </div>
-
-    <div class="returns-hero-decoration" aria-hidden="true">
-        ↩
-    </div>
+<div class="channel-tabs">
+    <a class="@(ViewBag.Channel as string == "website" ? null : "is-on")" href="/Returns">Trendyol</a>
+    <a class="@(ViewBag.Channel as string == "website" ? "is-on" : null)" href="/Returns?channel=website">E-ticaret</a>
 </div>
 
 @if (ViewBag.ApiError is not null)
@@ -46,7 +35,7 @@
 
 <div class="returns-stat-grid">
 
-    <div class="returns-stat-card returns-stat-total">
+    <a class="returns-stat-card returns-stat-total" href="/Returns?channel=@ViewBag.Channel">
         <div class="returns-stat-icon">
             <span>▤</span>
         </div>
@@ -58,9 +47,9 @@
         </div>
 
         <div class="returns-stat-arrow" aria-hidden="true">›</div>
-    </div>
+    </a>
 
-    <div class="returns-stat-card returns-stat-pending">
+    <a class="returns-stat-card returns-stat-pending" href="/Returns?channel=@ViewBag.Channel&status=1">
         <div class="returns-stat-icon">
             <span>◷</span>
         </div>
@@ -72,9 +61,9 @@
         </div>
 
         <div class="returns-stat-arrow" aria-hidden="true">›</div>
-    </div>
+    </a>
 
-    <div class="returns-stat-card returns-stat-accepted">
+    <a class="returns-stat-card returns-stat-accepted" href="/Returns?channel=@ViewBag.Channel&status=2">
         <div class="returns-stat-icon">
             <span>✓</span>
         </div>
@@ -86,7 +75,7 @@
         </div>
 
         <div class="returns-stat-arrow" aria-hidden="true">›</div>
-    </div>
+    </a>
 
 </div>
 
@@ -99,8 +88,10 @@
             <p>@Model.Total kayıt bulundu</p>
         </div>
 
-        <form method="get"
-              class="filters">
+        <form method="get" class="filters">
+            <input type="hidden" name="channel" value="@ViewBag.Channel" />
+            @if (ViewBag.Channel as string != "website")
+            {
 
             <select name="status">
                 <option value="">
@@ -128,10 +119,8 @@
                 </option>
             </select>
 
-            <button class="filter-button"
-                    type="submit">
-                Filtrele
-            </button>
+            <button class="filter-button" type="submit">Filtrele</button>
+            }
 
         </form>
 
@@ -171,10 +160,17 @@
             {
                 <tr>
                     <td data-label="Sipariş" class="return-order-cell">
-                        <a href="@Url.Action("Details", "Returns", new { id = item.Id })"
-                           class="order-number return-detail-link">
-                            #@item.OrderNumber
-                        </a>
+                        @if (item.Id == Guid.Empty)
+                        {
+                            <span class="order-number">#@item.OrderNumber</span>
+                        }
+                        else
+                        {
+                            <a href="@Url.Action("Details", "Returns", new { id = item.Id })"
+                               class="order-number return-detail-link">
+                                #@item.OrderNumber
+                            </a>
+                        }
                     </td>
 
                     <td data-label="Ürün" class="product-cell return-product-cell">
@@ -241,10 +237,13 @@
                     </td>
 
                     <td data-label="" class="return-action-cell">
-                        <a href="@Url.Action("Details", "Returns", new { id = item.Id })"
-                           class="order-detail-button">
-                            Detay →
-                        </a>
+                        @if (item.Id != Guid.Empty)
+                        {
+                            <a href="@Url.Action("Details", "Returns", new { id = item.Id })"
+                               class="order-detail-button">
+                                Detay →
+                            </a>
+                        }
                     </td>
                 </tr>
             }
@@ -276,7 +275,8 @@
                 {
                     <a asp-action="Index"
                        asp-route-page="@(Model.Page - 1)"
-                       asp-route-status="@selectedStatus">
+                       asp-route-status="@selectedStatus"
+                       asp-route-channel="@ViewBag.Channel">
                         ← Önceki
                     </a>
                 }
@@ -285,6 +285,7 @@
                 {
                     <a asp-action="Index"
                        asp-route-page="@(Model.Page + 1)"
+                       asp-route-channel="@ViewBag.Channel"
                        asp-route-status="@selectedStatus">
                         Sonraki →
                     </a>

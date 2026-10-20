@@ -15,10 +15,29 @@ public sealed class CashController(IHttpClientFactory httpClientFactory) : Contr
         {
             ViewBag.Products = await LoadProductsAsync(cancellationToken);
 
-            var page = await httpClientFactory.CreateClient("api")
-                .GetFromJsonAsync<CashPage>("api/cash", cancellationToken);
+            var client = httpClientFactory.CreateClient("api");
+            var page = await client.GetFromJsonAsync<CashPage>("api/cash", cancellationToken)
+                ?? new CashPage();
 
-            return View(page ?? new CashPage());
+            try
+            {
+                var overview = await client.GetFromJsonAsync<BusinessOverviewModel>(
+                    "api/dashboard/overview",
+                    cancellationToken);
+                if (overview is not null)
+                {
+                    page.TrendyolRevenue = overview.TrendyolRevenue;
+                    page.TrendyolOrders = overview.TrendyolOrders;
+                    page.WebsiteRevenue = overview.WebsiteRevenue;
+                    page.WebsiteOrders = overview.WebsiteOrders;
+                }
+            }
+            catch (HttpRequestException)
+            {
+                ViewBag.ApiError = "Entegrasyon tutarları okunamadı.";
+            }
+
+            return View(page);
         }
         catch (HttpRequestException)
         {

@@ -263,26 +263,96 @@ public sealed class ProductsController(
         int page = 0,
         int size = 25,
         string? search = null,
+        string? channel = null,
         CancellationToken cancellationToken = default)
     {
-        var url = $"api/products/trendyol?page={page}&size={size}";
+        if (page < 0)
+            page = 0;
+        if (size is < 1 or > 100)
+            size = 25;
 
-        if (!string.IsNullOrWhiteSpace(search))
-            url += $"&search={Uri.EscapeDataString(search)}";
+        var model = new IntegrationCatalogPage
+        {
+            Page = page,
+            Size = size,
+            Channel = channel
+        };
+        ViewBag.Search = search;
 
         try
         {
-            var result = await httpClientFactory.CreateClient("api")
-                .GetFromJsonAsync<ProductPage>(url, cancellationToken);
+            var client = httpClientFactory.CreateClient("api");
+            var trendyol = new List<ProductRow>();
+            for (var index = 0; index < 8; index++)
+            {
+                var chunk = await client.GetFromJsonAsync<ProductPage>(
+                    $"api/products/trendyol?page={index}&size=100",
+                    cancellationToken);
+                if (chunk is null || chunk.Items.Count == 0)
+                    break;
+                trendyol.AddRange(chunk.Items);
+                if (trendyol.Count >= chunk.Total)
+                    break;
+            }
 
-            ViewBag.Search = search;
-            return View(result ?? new ProductPage());
+            IReadOnlyList<WebsiteProductRow> website = [];
+            try
+            {
+                website = await client.GetFromJsonAsync<List<WebsiteProductRow>>(
+                    "api/products/website",
+                    cancellationToken) ?? [];
+            }
+            catch (HttpRequestException)
+            {
+                model.WebsiteNote = "E-ticaret ürünleri şu an okunamadı.";
+            }
+
+            var rows = trendyol.Select(x => new IntegrationProductRow
+            {
+                Id = x.Id,
+                Channel = "Trendyol",
+                Name = x.Name,
+                Barcode = x.Barcode,
+                StockCode = x.StockCode,
+                ImageUrl = x.ImageUrl,
+                Quantity = x.Quantity,
+                UpdatedAt = x.UpdatedAt
+            }).Concat(website.Select(x => new IntegrationProductRow
+            {
+                Channel = "E-ticaret",
+                Name = x.Name,
+                Barcode = x.Barcode,
+                ImageUrl = x.ImageUrl,
+                Quantity = x.Quantity,
+                Price = x.Price
+            }));
+
+            model.TrendyolCount = trendyol.Count;
+            model.WebsiteCount = website.Count;
+
+            if (string.Equals(channel, "trendyol", StringComparison.OrdinalIgnoreCase))
+                rows = rows.Where(x => x.Channel == "Trendyol");
+            else if (string.Equals(channel, "website", StringComparison.OrdinalIgnoreCase))
+                rows = rows.Where(x => x.Channel == "E-ticaret");
+
+            if (!string.IsNullOrWhiteSpace(search))
+            {
+                var term = search.Trim();
+                rows = rows.Where(x =>
+                    x.Name.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    x.Barcode.Contains(term, StringComparison.OrdinalIgnoreCase) ||
+                    (x.StockCode?.Contains(term, StringComparison.OrdinalIgnoreCase) ?? false));
+            }
+
+            var list = rows.OrderBy(x => x.Name).ThenBy(x => x.Barcode).ToList();
+            model.Total = list.Count;
+            model.Items = list.Skip(page * size).Take(size).ToList();
+            return View(model);
         }
         catch (HttpRequestException)
         {
-            ViewBag.ApiError = "Trendyol ürünleri alınırken API bağlantısı kurulamadı.";
-            ViewBag.Search = search;
-            return View(new ProductPage());
+            ViewBag.ApiError = "Entegrasyon ürünleri alınırken API bağlantısı kurulamadı.";
+            return View(model);
         }
     }
 

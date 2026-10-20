@@ -9,9 +9,27 @@
 <div class="page-heading">
     <div>
         <h1>@Model.Name</h1>
-        <p>@Model.KindText · Bakiye @Model.Balance.ToString("N2") ₺</p>
+        <p>@Model.KindText@(string.IsNullOrWhiteSpace(Model.Phone) ? "" : " · " + Model.Phone)</p>
     </div>
     <a asp-controller="CurrentAccounts" asp-action="Index" class="profile-secondary-button">← Carilere Dön</a>
+</div>
+
+<div class="summary-grid">
+    <div class="summary-card">
+        <span>Bakiye</span>
+        <strong>@TurkishMoney.Format(Model.Balance)</strong>
+        <small>@(Model.Balance > 0 ? "Cari borçlu" : Model.Balance < 0 ? "Cari alacaklı" : "Dengede")</small>
+    </div>
+    <div class="summary-card">
+        <span>Telefon</span>
+        <strong>@(string.IsNullOrWhiteSpace(Model.Phone) ? "—" : Model.Phone)</strong>
+        <small>Vergi no @(string.IsNullOrWhiteSpace(Model.TaxNumber) ? "—" : Model.TaxNumber)</small>
+    </div>
+    <div class="summary-card">
+        <span>Hareket</span>
+        <strong>@Model.Entries.Count</strong>
+        <small>Kayıtlı satır</small>
+    </div>
 </div>
 
 @if (TempData["SuccessMessage"] is string success)

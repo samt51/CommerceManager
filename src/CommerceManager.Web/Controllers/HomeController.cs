@@ -7,14 +7,20 @@ namespace CommerceManager.Web.Controllers;
 public sealed class HomeController(IHttpClientFactory httpClientFactory) : Controller
 {
     [HttpGet]
-    public async Task<IActionResult> Index(CancellationToken cancellationToken)
+    public async Task<IActionResult> Index(
+        string? period,
+        CancellationToken cancellationToken)
     {
+        if (period is not ("week" or "month"))
+            period = "day";
+
+        ViewBag.Period = period;
         var model = new BusinessOverviewModel();
 
         try
         {
             model = await httpClientFactory.CreateClient("api")
-                .GetFromJsonAsync<BusinessOverviewModel>("api/dashboard/overview", cancellationToken)
+                .GetFromJsonAsync<BusinessOverviewModel>($"api/dashboard/overview?period={period}", cancellationToken)
                 ?? new BusinessOverviewModel();
         }
         catch (HttpRequestException)

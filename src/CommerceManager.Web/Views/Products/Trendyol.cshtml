@@ -1,10 +1,8 @@
-@model CommerceManager.Web.Models.ProductPage
+@model CommerceManager.Web.Models.IntegrationCatalogPage
 
 @{
-    ViewData["Title"] = "Trendyol Ürünleri";
-
+    ViewData["Title"] = "Entegrasyon Ürünleri";
     string? search = ViewBag.Search as string;
-
     var totalPages = Model.Size > 0
         ? (int)Math.Ceiling(Model.Total / (double)Model.Size)
         : 0;
@@ -12,107 +10,75 @@
 
 <div class="page-heading">
     <div>
-        <h1>Trendyol Ürünleri</h1>
-        <p>Trendyol'dan senkronlanan entegrasyon kataloğu. Kendi ürünleriniz Ürünler sayfasındadır.</p>
+        <h1>Entegrasyon Ürünleri</h1>
+        <p>Trendyol ve e-ticaret sitelerinin kendi ilan listesi. Depo kartları Ürünler sayfasındadır.</p>
     </div>
-
-    <span class="channel-badge">
-        Trendyol
-    </span>
 </div>
 
 @if (ViewBag.ApiError is not null)
 {
-    <div class="alert-error">
-        @ViewBag.ApiError
-    </div>
+    <div class="alert-error">@ViewBag.ApiError</div>
+}
+@if (!string.IsNullOrWhiteSpace(Model.WebsiteNote))
+{
+    <div class="alert-error">@Model.WebsiteNote</div>
 }
 
 <div class="summary-grid">
-
     <div class="summary-card">
-        <span>Toplam Ürün</span>
-        <strong>@(Model.WithStockCount + Model.WithoutStockCount)</strong>
-        <small>Trendyol kataloğu</small>
+        <span>Toplam</span>
+        <strong>@(Model.TrendyolCount + Model.WebsiteCount)</strong>
+        <small>İki kanal</small>
     </div>
-
     <div class="summary-card">
-        <span>Stok Kaydı Olan</span>
-        <strong>@Model.WithStockCount</strong>
-        <small>ChannelStock eşleşmesi</small>
+        <span>Trendyol</span>
+        <strong>@Model.TrendyolCount</strong>
+        <small>Pazaryeri ilanı</small>
     </div>
-
     <div class="summary-card">
-        <span>Stok Kaydı Olmayan</span>
-        <strong>@Model.WithoutStockCount</strong>
-        <small>Katalogda mevcut</small>
+        <span>E-ticaret</span>
+        <strong>@Model.WebsiteCount</strong>
+        <small>T-Soft kataloğu</small>
     </div>
+</div>
 
+<div class="channel-tabs">
+    <a class="@(string.IsNullOrWhiteSpace(Model.Channel) ? "is-on" : null)" href="/Products/Trendyol?search=@search">Tümü</a>
+    <a class="@(Model.Channel == "trendyol" ? "is-on" : null)" href="/Products/Trendyol?channel=trendyol&search=@search">Trendyol</a>
+    <a class="@(Model.Channel == "website" ? "is-on" : null)" href="/Products/Trendyol?channel=website&search=@search">E-ticaret</a>
 </div>
 
 <div class="panel">
-
     <div class="panel-header">
         <div>
-            <h2>Ürün Kataloğu</h2>
-            <p>@Model.Total kayıt bulundu</p>
+            <h2>Ürün kataloğu</h2>
+            <p>@Model.Total kayıt</p>
         </div>
-
-        <form method="get"
-              action="/Products/Trendyol"
-              class="filters">
-
-            <input type="text"
-                   name="search"
-                   value="@search"
-                   placeholder="Ürün, barkod veya stok kodu..."
-                   class="filter-input" />
-
-            <input type="hidden"
-                   name="size"
-                   value="@Model.Size" />
-
-            <button type="submit"
-                    class="filter-button">
-                Ara
-            </button>
-
-            @if (!string.IsNullOrWhiteSpace(search))
-            {
-                <a href="/Products/Trendyol"
-                   class="filter-clear">
-                    Temizle
-                </a>
-            }
-
+        <form method="get" action="/Products/Trendyol" class="filters">
+            <input type="text" name="search" value="@search" placeholder="Ürün veya barkod..." class="filter-input" />
+            <input type="hidden" name="channel" value="@Model.Channel" />
+            <input type="hidden" name="size" value="@Model.Size" />
+            <button type="submit" class="filter-button">Ara</button>
         </form>
     </div>
 
     <div class="table-wrap">
-
         <table>
             <thead>
                 <tr>
                     <th>Ürün</th>
-                    <th>Stok Kodu</th>
                     <th>Barkod</th>
-                    <th>Trendyol Ürün ID</th>
                     <th>Kanal</th>
                     <th>Stok</th>
+                    <th>Fiyat</th>
                     <th>Durum</th>
-                    <th>Güncelleme</th>
                 </tr>
             </thead>
-
             <tbody>
-
             @if (Model.Items.Count == 0)
             {
                 <tr>
-                    <td colspan="8"
-                        class="empty">
-                        Ürün bulunamadı.
-                    </td>
+                    <td colspan="6" class="empty">Ürün bulunamadı.</td>
                 </tr>
             }
             else
@@ -120,132 +86,128 @@
                 foreach (var item in Model.Items)
                 {
                     <tr>
-
                         <td data-label="Ürün">
                             <div class="stock-product">
-
                                 @if (!string.IsNullOrWhiteSpace(item.ImageUrl))
                                 {
-                                    <img src="@item.ImageUrl"
-                                         alt="@item.Name"
-                                         class="stock-product-image" />
+                                    <img src="@item.ImageUrl" alt="" class="stock-product-image" />
                                 }
                                 else
                                 {
-                                    <div class="stock-product-image stock-image-placeholder">
-                                        —
-                                    </div>
+                                    <div class="stock-product-image stock-image-placeholder">—</div>
                                 }
-
                                 <div>
-                                    <a href="@Url.Action("Details", "Products", new { id = item.Id })"
-                                       class="product-name-link">
-                                        <strong class="stock-product-name">
-                                            @item.Name
-                                        </strong>
-                                    </a>
-
-                                    @if (!string.IsNullOrWhiteSpace(item.ProductMainId))
+                                    @if (item.Id is Guid id)
                                     {
-                                        <small class="product-main-id">
-                                            @item.ProductMainId
-                                        </small>
+                                        <a href="@Url.Action("Details", "Products", new { id })" class="product-name-link">
+                                            <strong class="stock-product-name">@item.Name</strong>
+                                        </a>
+                                    }
+                                    else
+                                    {
+                                        <button type="button"
+                                                class="product-name-link website-detail"
+                                                data-name="@item.Name"
+                                                data-barcode="@item.Barcode"
+                                                data-price="@(item.Price is decimal websitePrice ? TurkishMoney.Format(websitePrice) : "—")"
+                                                data-stock="@item.StockText"
+                                                data-status="@item.StockStatusText"
+                                                data-image="@item.ImageUrl">
+                                            <strong class="stock-product-name">@item.Name</strong>
+                                        </button>
+                                    }
+                                    @if (!string.IsNullOrWhiteSpace(item.StockCode))
+                                    {
+                                        <small class="product-main-id">@item.StockCode</small>
                                     }
                                 </div>
-
                             </div>
                         </td>
-
-                        <td data-label="Stok Kodu">
-                            @(string.IsNullOrWhiteSpace(item.StockCode)
-                                ? "—"
-                                : item.StockCode)
-                        </td>
-
-                        <td data-label="Barkod" class="stock-barcode"
-                            title="@item.Barcode">
-                            @item.Barcode
-                        </td>
-
-                        <td data-label="Trendyol Ürün ID">
-                            @(string.IsNullOrWhiteSpace(item.ExternalProductId)
-                                ? "—"
-                                : item.ExternalProductId)
-                        </td>
-
-                        <td data-label="Kanal">
-                            <span class="channel-badge compact">
-                                Trendyol
-                            </span>
-                        </td>
-
-                        <td data-label="Stok">
-                            <strong class="stock-quantity">
-                                @item.StockText
-                            </strong>
-                        </td>
-
-                        <td data-label="Durum">
-                            <span class="status @item.StockStatusCss">
-                                @item.StockStatusText
-                            </span>
-                        </td>
-
-                        <td data-label="Güncelleme" class="order-date stock-table-date">
-                            @(item.UpdatedAt
-                                .ToLocalTime()
-                                .ToString("dd.MM.yyyy HH:mm"))
-                        </td>
-
+                        <td data-label="Barkod" class="stock-barcode">@item.Barcode</td>
+                        <td data-label="Kanal"><span class="channel-badge compact">@item.Channel</span></td>
+                        <td data-label="Stok"><strong class="stock-quantity">@item.StockText</strong></td>
+                        <td data-label="Fiyat">@(item.Price is decimal price ? TurkishMoney.Format(price) : "—")</td>
+                        <td data-label="Durum"><span class="status @item.StockStatusCss">@item.StockStatusText</span></td>
                     </tr>
                 }
             }
-
             </tbody>
         </table>
-
     </div>
 
     @if (totalPages > 1)
     {
         <div class="pagination">
-
-            <span>
-                Sayfa @(Model.Page + 1) / @totalPages
-                · @Model.Total kayıt
-            </span>
-
+            <span>Sayfa @(Model.Page + 1) / @totalPages · @Model.Total kayıt</span>
             <div>
-
                 @if (Model.Page > 0)
                 {
-                    <a href="@Url.Action("Trendyol", "Products",
-                                 new
-                                 {
-                                     page = Model.Page - 1,
-                                     size = Model.Size,
-                                     search
-                                 })">
-                        ← Önceki
-                    </a>
+                    <a href="@Url.Action("Trendyol", "Products", new { page = Model.Page - 1, size = Model.Size, search, channel = Model.Channel })">← Önceki</a>
                 }
-
                 @if (Model.Page + 1 < totalPages)
                 {
-                    <a href="@Url.Action("Trendyol", "Products",
-                                 new
-                                 {
-                                     page = Model.Page + 1,
-                                     size = Model.Size,
-                                     search
-                                 })">
-                        Sonraki →
-                    </a>
+                    <a href="@Url.Action("Trendyol", "Products", new { page = Model.Page + 1, size = Model.Size, search, channel = Model.Channel })">Sonraki →</a>
                 }
-
             </div>
-
         </div>
     }
-
 </div>
+
+<div class="user-modal-backdrop" id="websiteModal" aria-hidden="true">
+    <div class="user-modal" role="dialog" aria-modal="true">
+        <div class="user-modal-header">
+            <div class="user-modal-title">
+                <img id="websiteImage" alt="" class="stock-product-image" hidden />
+                <div>
+                    <h2 id="websiteName">Ürün</h2>
+                    <p>E-ticaret ilanı. Depo kartı değildir.</p>
+                </div>
+            </div>
+            <button type="button" class="user-modal-close" id="closeWebsiteModal" aria-label="Kapat">×</button>
+        </div>
+        <div class="user-modal-body">
+            <div class="summary-grid">
+                <div class="summary-card"><span>Barkod</span><strong id="websiteBarcode">—</strong></div>
+                <div class="summary-card"><span>Fiyat</span><strong id="websitePrice">—</strong></div>
+                <div class="summary-card"><span>Stok</span><strong id="websiteStock">—</strong><small id="websiteStatus"></small></div>
+            </div>
+        </div>
+        <div class="user-modal-footer">
+            <button type="button" class="user-modal-cancel" id="cancelWebsiteModal">Kapat</button>
+        </div>
+    </div>
+</div>
+
+<script>
+(() => {
+    const modal = document.getElementById("websiteModal");
+    const close = () => {
+        modal.classList.remove("open");
+        modal.setAttribute("aria-hidden", "true");
+    };
+    document.querySelectorAll(".website-detail").forEach(button => {
+        button.addEventListener("click", () => {
+            document.getElementById("websiteName").textContent = button.dataset.name || "Ürün";
+            document.getElementById("websiteBarcode").textContent = button.dataset.barcode || "—";
+            document.getElementById("websitePrice").textContent = button.dataset.price || "—";
+            document.getElementById("websiteStock").textContent = button.dataset.stock || "—";
+            document.getElementById("websiteStatus").textContent = button.dataset.status || "";
+            const image = document.getElementById("websiteImage");
+            if (button.dataset.image) {
+                image.src = button.dataset.image;
+                image.hidden = false;
+            } else {
+                image.hidden = true;
+                image.removeAttribute("src");
+            }
+            modal.classList.add("open");
+            modal.setAttribute("aria-hidden", "false");
+        });
+    });
+    document.getElementById("closeWebsiteModal")?.addEventListener("click", close);
+    document.getElementById("cancelWebsiteModal")?.addEventListener("click", close);
+    modal?.addEventListener("click", event => {
+        if (event.target === modal) close();
+    });
+})();
+</script>

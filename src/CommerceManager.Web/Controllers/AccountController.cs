@@ -116,7 +116,8 @@ public sealed class AccountController : Controller
             properties);
 
         if (!string.IsNullOrWhiteSpace(returnUrl) &&
-            Url.IsLocalUrl(returnUrl))
+            Url.IsLocalUrl(returnUrl) &&
+            !returnUrl.Contains("/Account/Logout", StringComparison.OrdinalIgnoreCase))
         {
             return LocalRedirect(returnUrl);
         }
@@ -124,10 +125,20 @@ public sealed class AccountController : Controller
         return RedirectToAction("Index", "Home");
     }
 
+    [AllowAnonymous]
+    [HttpGet]
+    public IActionResult Logout()
+    {
+        return RedirectToAction(
+            User.Identity?.IsAuthenticated == true ? "Index" : nameof(Login),
+            User.Identity?.IsAuthenticated == true ? "Home" : "Account");
+    }
+
     [Authorize]
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Logout()
+    [ActionName("Logout")]
+    public async Task<IActionResult> LogoutPost()
     {
         await HttpContext.SignOutAsync(
             CookieAuthenticationDefaults.AuthenticationScheme);

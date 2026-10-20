@@ -7,8 +7,14 @@
 <div class="page-heading">
     <div>
         <h1>Dashboard</h1>
-        <p>Bugünün özeti. Perakende, Trendyol ve e-ticaret ayrı durur.</p>
+        <p>Ciro, kâr değildir. Alış fiyatı olmadığı için burada yalnızca satılan tutar görünür. Stok eldeki adettir.</p>
     </div>
+</div>
+
+<div class="channel-tabs">
+    <a class="@(ViewBag.Period as string == "day" ? "is-on" : null)" href="/?period=day">Bugün</a>
+    <a class="@(ViewBag.Period as string == "week" ? "is-on" : null)" href="/?period=week">Bu hafta</a>
+    <a class="@(ViewBag.Period as string == "month" ? "is-on" : null)" href="/?period=month">Bu ay</a>
 </div>
 
 @if (!string.IsNullOrWhiteSpace(Model.ApiError))
@@ -18,14 +24,14 @@
 
 <div class="summary-grid">
     <div class="summary-card">
-        <span>Bugünkü ciro</span>
+        <span>@(ViewBag.Period as string == "week" ? "Haftalık ciro" : ViewBag.Period as string == "month" ? "Aylık ciro" : "Bugünkü ciro")</span>
         <strong>@TurkishMoney.Format(Model.TotalRevenue)</strong>
         <small>@Model.TotalSales satış</small>
     </div>
     <div class="summary-card">
         <span>Kasa</span>
         <strong>@TurkishMoney.Format(Model.CashBalance)</strong>
-        <small>Bugünkü gider @TurkishMoney.Format(Model.TodayExpenses)</small>
+        <small>Dönem gideri @TurkishMoney.Format(Model.TodayExpenses)</small>
     </div>
     <div class="summary-card">
         <span>Eldeki stok</span>
@@ -38,7 +44,7 @@
     <div class="panel-header">
         <div>
             <h2>Kanallar</h2>
-            <p>Trendyol tutarı sipariş servisinden anlık. E-ticaret site bağlanınca aynı şekilde gelecek.</p>
+            <p>Trendyol ve e-ticaret tutarı sipariş servisinden anlık okunur.</p>
         </div>
     </div>
     <div class="table-wrap">
@@ -74,14 +80,22 @@
             </tbody>
         </table>
     </div>
-    @if (Model.TrendyolFinanceAvailable)
+    @if (Model.TrendyolFinanceAvailable && ViewBag.Period as string == "day")
     {
-        <p class="panel-note">
-            Bugün verilen Trendyol siparişlerinin finans kaydı:
-            komisyon @TurkishMoney.Format(Model.TrendyolCommission),
-            indirim @TurkishMoney.Format(Model.TrendyolDiscount),
-            satıcı tutarı @TurkishMoney.Format(Model.TrendyolSellerRevenue).
-            Üstteki ciro paket tutarıdır.
-        </p>
+        <div class="finance-strip">
+            <div>
+                <span>Komisyon</span>
+                <strong>@TurkishMoney.Format(Model.TrendyolCommission)</strong>
+            </div>
+            <div>
+                <span>İndirim</span>
+                <strong>@TurkishMoney.Format(Model.TrendyolDiscount)</strong>
+            </div>
+            <div>
+                <span>Satıcı tutarı</span>
+                <strong>@TurkishMoney.Format(Model.TrendyolSellerRevenue)</strong>
+            </div>
+            <p>Bugün verilen Trendyol siparişlerinin finans kaydı. Üstteki ciro paket tutarıdır.</p>
+        </div>
     }
 </div>

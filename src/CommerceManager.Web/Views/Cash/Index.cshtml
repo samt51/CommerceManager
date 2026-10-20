@@ -9,10 +9,13 @@
         <h1>Kasa</h1>
         <p>Girişler kasayı artırır. Giderler otomatik çıkış yazar. Perakende satış stoktan düşer ve tutarı kasaya ekler.</p>
     </div>
-    <button type="button" class="users-primary-button" id="openSaleModal">
-        <span>＋</span>
-        Perakende Satış
-    </button>
+    <div class="heading-actions">
+        <button type="button" class="profile-secondary-button" id="openCashModal">Kasa girişi</button>
+        <button type="button" class="users-primary-button" id="openSaleModal">
+            <span>＋</span>
+            Perakende Satış
+        </button>
+    </div>
 </div>
 
 @if (TempData["SuccessMessage"] is string success)
@@ -46,25 +49,41 @@
     </div>
 </div>
 
-<div class="profile-form-card catalog-create-card">
-    <div class="profile-card-header">
-        <h2>Kasa girişi</h2>
-        <p>Kasaya konan nakit. Gider buradan düşer.</p>
+<div class="panel">
+    <div class="panel-header">
+        <div>
+            <h2>Entegrasyon cirosu</h2>
+            <p>Bugün Trendyol ve e-ticaretten gelen tutar. Kasadaki nakde eklenmez.</p>
+        </div>
     </div>
-    <form asp-action="AddInflow" method="post">
-        @Html.AntiForgeryToken()
-        <div class="profile-field">
-            <label>Tutar</label>
-            <input name="AmountText" class="profile-input money-input" inputmode="decimal" placeholder="1.000,50" />
-        </div>
-        <div class="profile-field">
-            <label>Açıklama</label>
-            <input name="Description" class="profile-input" placeholder="Örnek: Gün başı kasa" />
-        </div>
-        <div class="profile-actions">
-            <button type="submit" class="profile-primary-button">Girişi Kaydet</button>
-        </div>
-    </form>
+    <div class="table-wrap">
+        <table>
+            <thead>
+                <tr>
+                    <th>Kanal</th>
+                    <th>Satış</th>
+                    <th>Tutar</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Trendyol</td>
+                    <td>@(Model.TrendyolOrders)</td>
+                    <td>@TurkishMoney.Format(Model.TrendyolRevenue)</td>
+                </tr>
+                <tr>
+                    <td>E-ticaret</td>
+                    <td>@(Model.WebsiteOrders)</td>
+                    <td>@TurkishMoney.Format(Model.WebsiteRevenue)</td>
+                </tr>
+                <tr>
+                    <td><strong>Toplam</strong></td>
+                    <td><strong>@(Model.TrendyolOrders + Model.WebsiteOrders)</strong></td>
+                    <td><strong>@TurkishMoney.Format(Model.TrendyolRevenue + Model.WebsiteRevenue)</strong></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </div>
 
 <div class="panel">
@@ -103,6 +122,38 @@
 @{
     var products = ViewBag.Products as List<CatalogProductRow> ?? [];
 }
+
+<div class="user-modal-backdrop" id="cashModal" aria-hidden="true">
+    <div class="user-modal" role="dialog" aria-modal="true">
+        <div class="user-modal-header">
+            <div class="user-modal-title">
+                <div class="user-modal-icon">◎</div>
+                <div>
+                    <h2>Kasa girişi</h2>
+                    <p>Kasaya konan nakit. Gider ve çıkış bu bakiyeden düşer.</p>
+                </div>
+            </div>
+            <button type="button" class="user-modal-close" id="closeCashModal" aria-label="Kapat">×</button>
+        </div>
+        <form asp-action="AddInflow" method="post">
+            @Html.AntiForgeryToken()
+            <div class="user-modal-body">
+                <div class="user-form-group user-form-full">
+                    <label>Tutar</label>
+                    <input name="AmountText" class="profile-input money-input" inputmode="decimal" placeholder="1000,50" />
+                </div>
+                <div class="user-form-group user-form-full">
+                    <label>Açıklama</label>
+                    <input name="Description" class="profile-input" placeholder="Örnek: Gün başı kasa" />
+                </div>
+            </div>
+            <div class="user-modal-footer">
+                <button type="button" class="user-modal-cancel" id="cancelCashModal">Vazgeç</button>
+                <button type="submit" class="user-modal-submit">Girişi Kaydet</button>
+            </div>
+        </form>
+    </div>
+</div>
 
 <div class="user-modal-backdrop" id="saleModal" aria-hidden="true">
     <div class="user-modal" role="dialog" aria-modal="true">
@@ -149,6 +200,7 @@
 <script>
 (() => {
     const modal = document.getElementById("saleModal");
+    const cashModal = document.getElementById("cashModal");
     const price = document.getElementById("salePrice");
     const cashAmount = document.querySelector(".money-input");
     const format = input => {
@@ -175,6 +227,20 @@
         modal.classList.remove("open");
         modal.setAttribute("aria-hidden", "true");
     };
+    const openCash = () => {
+        cashModal.classList.add("open");
+        cashModal.setAttribute("aria-hidden", "false");
+    };
+    const closeCash = () => {
+        cashModal.classList.remove("open");
+        cashModal.setAttribute("aria-hidden", "true");
+    };
+    document.getElementById("openCashModal")?.addEventListener("click", openCash);
+    document.getElementById("closeCashModal")?.addEventListener("click", closeCash);
+    document.getElementById("cancelCashModal")?.addEventListener("click", closeCash);
+    cashModal?.addEventListener("click", event => {
+        if (event.target === cashModal) closeCash();
+    });
     document.getElementById("openSaleModal")?.addEventListener("click", open);
     document.getElementById("closeSaleModal")?.addEventListener("click", close);
     document.getElementById("cancelSaleModal")?.addEventListener("click", close);

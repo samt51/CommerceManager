@@ -13,12 +13,16 @@ public sealed class OrdersController(
         int page = 0,
         int size = 25,
         string? status = null,
+        string? channel = null,
         CancellationToken cancellationToken = default)
     {
+        var website = string.Equals(channel, "website", StringComparison.OrdinalIgnoreCase);
+        ViewBag.Channel = website ? "website" : "trendyol";
         var client = httpClientFactory.CreateClient("api");
 
-        var url =
-            $"api/orders/trendyol?page={page}&size={size}";
+        var url = website
+            ? $"api/orders/website?page={page}&size={size}"
+            : $"api/orders/trendyol?page={page}&size={size}";
 
         if (!string.IsNullOrWhiteSpace(status))
             url += $"&status={Uri.EscapeDataString(status)}";
